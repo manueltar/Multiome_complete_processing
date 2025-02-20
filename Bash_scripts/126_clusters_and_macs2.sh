@@ -12,7 +12,7 @@ output_dir=$(echo "$MASTER_ROUTE""$analysis""/")
 
 Log_files=$(echo "$output_dir""/""Log_files/")
  
-conda activate multiome_QC
+conda activate multiome_QC_DEF
 
 
 ### cluster_merged_object

@@ -12,7 +12,7 @@ output_dir=$(echo "$MASTER_ROUTE""$analysis""/")
 
 Log_files=$(echo "$output_dir""/""Log_files/")
  
-conda activate multiome_QC
+conda activate multiome_QC_DEF
 
 sample_array=$(echo 'MCO_01326,MCO_01327,MCO_01328,MCO_01329')
 

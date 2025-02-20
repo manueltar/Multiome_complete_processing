@@ -1,13 +1,13 @@
 
 .libPaths()
-.libPaths(new = c("/home/manuel.tardaguila/conda_envs/multiome_QC/lib/R/library"))
+.libPaths(new = c("/home/manuel.tardaguila/conda_envs/multiome_QC_DEF/lib/R/library"))
 .libPaths()
 # sessionInfo()
 
-Sys.setenv(RETICULATE_PYTHON="/home/manuel.tardaguila/conda_envs/multiome_QC/bin/python")
+Sys.setenv(RETICULATE_PYTHON="/home/manuel.tardaguila/conda_envs/multiome_QC_DEF/bin/python")
 library(reticulate)
-reticulate::use_python("/home/manuel.tardaguila/conda_envs/multiome_QC/bin/python")
-reticulate::use_condaenv("/home/manuel.tardaguila/conda_envs/multiome_QC")
+reticulate::use_python("/home/manuel.tardaguila/conda_envs/multiome_QC_DEF/bin/python")
+reticulate::use_condaenv("/home/manuel.tardaguila/conda_envs/multiome_QC_DEF")
 reticulate::py_module_available(module='leidenalg')
 reticulate::import('leidenalg')
 suppressMessages(library("optparse"))

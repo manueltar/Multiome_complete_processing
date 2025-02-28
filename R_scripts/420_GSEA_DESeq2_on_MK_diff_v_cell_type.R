@@ -131,19 +131,33 @@ GSEA_function = function(option_list)
   cat("\n")
   
   
-  DE_results <- DE_results %>% mutate(diffexpressed = case_when(
+  ### Filter out NA padj -------------------------------
+  
+  DE_results_NO_NA<-DE_results[!is.na(DE_results$padj),]
+  
+  cat("DE_results_NO_NA_0\n")
+  cat(str(DE_results_NO_NA))
+  cat("\n")
+  
+  ############ create  diffexpressed column -----------------
+  
+  
+  DE_results_NO_NA <- DE_results_NO_NA %>% mutate(diffexpressed = case_when(
     log2FoldChange > log2FC_threshold & padj < pval_threshold ~ 'UP',
     log2FoldChange < log2FC_threshold & padj < pval_threshold ~ 'DOWN',
     padj > 0.05 ~ 'NO'
   ))
   
-  cat("DE_results_1\n")
-  cat(str(DE_results))
+  cat("DE_results_NO_NA_1\n")
+  cat(str(DE_results_NO_NA))
   cat("\n")
+  
+  
+  
   
   ## Get the genes that are present in your dataframe -----------------------------------------
   
-  dataset_genes_df<-as.data.frame(unique(DE_results$gene), stringsAsFactors=F)
+  dataset_genes_df<-as.data.frame(unique(DE_results_NO_NA$gene), stringsAsFactors=F)
   colnames(dataset_genes_df)<-'gene'
   
   
@@ -210,38 +224,31 @@ GSEA_function = function(option_list)
   
   
   # Prepare deg results -----------------------------------------------
+ 
+  DE_results_NO_NA_SIG<-DE_results_NO_NA[which(DE_results_NO_NA$diffexpressed !='NO'), ]
   
-  
-  DE_results_SIG <- DE_results[!is.na(DE_results$padj), ]
-  
-  cat("DE_results_SIG_0\n")
-  str(DE_results_SIG)
+  cat("DE_results_NO_NA_SIG_1\n")
+  str(DE_results_NO_NA_SIG)
   cat("\n")
   
-  DE_results_SIG<-DE_results_SIG[which(DE_results_SIG$diffexpressed !='NO'), ]
-  
-  cat("DE_results_SIG_1\n")
-  str(DE_results_SIG)
-  cat("\n")
-  
-  DE_results_SIG$ENTREZID <- mapIds(org.Hs.eg.db, keys=DE_results_SIG$gene, keytype="SYMBOL",
+  DE_results_NO_NA_SIG$ENTREZID <- mapIds(org.Hs.eg.db, keys=DE_results_NO_NA_SIG$gene, keytype="SYMBOL",
                             column="ENTREZID", multiVals=multiVals)
   
-  cat("DE_results_SIG_2\n")
-  str(DE_results_SIG)
+  cat("DE_results_NO_NA_SIG_2\n")
+  str(DE_results_NO_NA_SIG)
   cat("\n")
   
   
   # LOOP per contrast and cell type -----------------------------------------------------------------
   
   
-  array_contrasts<-unique(DE_results_SIG$contrast)
+  array_contrasts<-unique(DE_results_NO_NA_SIG$contrast)
   
   cat("array_contrasts\n")
   str(array_contrasts)
   cat("\n")
   
-  array_cell_types<-unique(DE_results_SIG$cell_type)
+  array_cell_types<-unique(DE_results_NO_NA_SIG$cell_type)
   
   cat("array_cell_types\n")
   str(array_cell_types)
@@ -252,9 +259,17 @@ GSEA_function = function(option_list)
   
   bg_files <- list.files(path = out_path, pattern = '_selected.rds$', full.names = TRUE)
   
+  cat("bg_files_0\n")
   str(bg_files)
+  cat("\n")
   
   FINAL_results<-data.frame()
+  
+  
+  #### key option in the GSEA https://github.com/YuLab-SMU/clusterProfiler/issues/283 -------------------------------------
+  
+  options(enrichment_force_universe=TRUE)
+  
   
   for(i in 1:length(array_contrasts)){
     
@@ -281,20 +296,20 @@ GSEA_function = function(option_list)
       cat(sprintf(as.character(cell_type_sel)))
       cat("\n")
       
-      DE_results_SIG_sel<-DE_results_SIG[which(DE_results_SIG$contrast == contrast_sel & DE_results_SIG$cell_type == cell_type_sel),]
+      DE_results_NO_NA_SIG_sel<-DE_results_NO_NA_SIG[which(DE_results_NO_NA_SIG$contrast == contrast_sel & DE_results_NO_NA_SIG$cell_type == cell_type_sel),]
       
-      if(dim(DE_results_SIG_sel)[1] > 0){
+      if(dim(DE_results_NO_NA_SIG_sel)[1] > 0){
         
         if(DEBUG ==1){
           
-          cat("DE_results_SIG_sel_0\n")
-          cat(str(DE_results_SIG_sel))
+          cat("DE_results_NO_NA_SIG_sel_0\n")
+          cat(str(DE_results_NO_NA_SIG_sel))
           cat("\n")
         }
         
         # Split the dataframe into a list of sub-dataframes: upregulated, downregulated genes
         
-        deg_results_list <- split(DE_results_SIG_sel, DE_results_SIG_sel$diffexpressed)
+        deg_results_list <- split(DE_results_NO_NA_SIG_sel, DE_results_NO_NA_SIG_sel$diffexpressed)
         
         if(DEBUG ==1){
           
@@ -330,6 +345,42 @@ GSEA_function = function(option_list)
           }
           
           
+          FLAG_Dorothea<-length((grep("Dorothea_", selected_collection)))
+          
+          if(DEBUG ==1){
+            
+            cat("FLAG_Dorothea_0\n")
+            str(FLAG_Dorothea)
+            cat("\n")
+          }
+          
+          if(FLAG_Dorothea == 0){
+            
+            universe<-unique(selected_collection_df$gene)
+            minGSSize_spec<-10
+            maxGSSize_spec<-500
+            
+          }else{
+            
+            setwd(out_path)
+            
+            HPO<-readRDS(file="c5.hpo.v2024.1.Hs.entrez_selected.rds") 
+            
+            if(DEBUG ==1){
+              
+              cat("HPO_0\n")
+              str(HPO)
+              cat("\n")
+            }
+            
+            universe<-unique(HPO$gene)
+            minGSSize_spec<-1
+            maxGSSize_spec<-5000
+            # universe<-unique(selected_collection_df$gene)
+            
+          }
+          
+          
           matches <- grep(paste(search_terms,collapse="|"),selected_collection_df$term)
           
           toMatch<-tolower(search_terms)
@@ -344,10 +395,20 @@ GSEA_function = function(option_list)
             
             selected_collection_df_sel<-selected_collection_df[total_matches,]
             
-            #### Key function of GSEA
+            #### Key function of GSEA -----------------------------------------------
+            
             
             res<-lapply(names(deg_results_list),
-                        function(x) enricher(deg_results_list[[x]]$ENTREZID, TERM2GENE = selected_collection_df_sel))
+                        function(x) enricher(gene= deg_results_list[[x]]$ENTREZID, 
+                                             TERM2GENE = selected_collection_df_sel, 
+                                             universe=universe,
+                                             maxGSSize=maxGSSize_spec,
+                                             minGSSize=minGSSize_spec,
+                                             pvalueCutoff = 0.05,
+                                             pAdjustMethod = "BH",
+                                             qvalueCutoff = 0.25))
+            
+            
             
             names(res) <- names(deg_results_list)
             
@@ -413,34 +474,44 @@ GSEA_function = function(option_list)
               res_df_long<-unique(as.data.frame(cSplit(res_df,sep = '/', direction = "long",
                                                        splitCols = "geneID"),stringsAsFactors=F))
               
-              res_df_long$geneID<-as.character(res_df_long$geneID)
+              if(dim(res_df_long)[1] >0){
+                
+                res_df_long$geneID<-as.character(res_df_long$geneID)
+                
+                if(DEBUG ==1){
+                  str(res_df_long)
+                  cat("\n")
+                }
+                
+                res_df_long$geneID <- mapIds(org.Hs.eg.db, keys=res_df_long$geneID, keytype="ENTREZID",
+                                             column="SYMBOL", multiVals=multiVals)
+                
+                if(DEBUG ==1){
+                  str(res_df_long)
+                  cat("\n")
+                }
+                
+                res_df_long.dt<-data.table(res_df_long, key=colnames(res_df_long)[-which(colnames(res_df_long) == 'geneID')])
+                
+                
+                res_df_long_collapsed<-as.data.frame(res_df_long.dt[,.(geneID=paste(geneID, collapse='/')), by=key(res_df_long.dt)], stringsAsFactors=F)
+                
+                if(DEBUG ==1){
+                  str(res_df_long_collapsed)
+                  cat("\n")
+                }
+                
+                
+                
+                results_per_cell_type<-rbind(res_df_long_collapsed, results_per_cell_type)          
+                
+              }else{
+                
+                results_per_cell_type<-rbind(res_df, results_per_cell_type)          
+                
+              }# dim(res_df_long)[1] >0
               
-              if(DEBUG ==1){
-                str(res_df_long)
-                cat("\n")
-              }
-              
-              res_df_long$geneID <- mapIds(org.Hs.eg.db, keys=res_df_long$geneID, keytype="ENTREZID",
-                                           column="SYMBOL", multiVals=multiVals)
-              
-              if(DEBUG ==1){
-                str(res_df_long)
-                cat("\n")
-              }
-              
-              res_df_long.dt<-data.table(res_df_long, key=colnames(res_df_long)[-which(colnames(res_df_long) == 'geneID')])
-              
-              
-              res_df_long_collapsed<-as.data.frame(res_df_long.dt[,.(geneID=paste(geneID, collapse='/')), by=key(res_df_long.dt)], stringsAsFactors=F)
-              
-              if(DEBUG ==1){
-                str(res_df_long_collapsed)
-                cat("\n")
-              }
-              
-              
-              
-              results_per_cell_type<-rbind(res_df_long_collapsed, results_per_cell_type)             
+                 
               
               
             }# length(filtered) > 0     
@@ -489,7 +560,7 @@ GSEA_function = function(option_list)
         
         
         
-      }# dim(DE_results_SIG_sel)[1] > 0
+      }# dim(DE_results_NO_NA_SIG_sel)[1] > 0
       
       
       

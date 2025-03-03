@@ -139,18 +139,7 @@ GSEA_function = function(option_list)
   cat(str(DE_results_NO_NA))
   cat("\n")
   
-  ############ create  diffexpressed column -----------------
-  
-  
-  DE_results_NO_NA <- DE_results_NO_NA %>% mutate(diffexpressed = case_when(
-    log2FoldChange > log2FC_threshold & padj < pval_threshold ~ 'UP',
-    log2FoldChange < log2FC_threshold & padj < pval_threshold ~ 'DOWN',
-    padj > 0.05 ~ 'NO'
-  ))
-  
-  cat("DE_results_NO_NA_1\n")
-  cat(str(DE_results_NO_NA))
-  cat("\n")
+ 
   
   
   
@@ -223,32 +212,36 @@ GSEA_function = function(option_list)
   }#i in 1:length(gmt_files))
   
   
-  # Prepare deg results -----------------------------------------------
+  # Prepare ALL genes results -----------------------------------------------
  
-  DE_results_NO_NA_SIG<-DE_results_NO_NA[which(DE_results_NO_NA$diffexpressed !='NO'), ]
+ 
   
-  cat("DE_results_NO_NA_SIG_1\n")
-  str(DE_results_NO_NA_SIG)
-  cat("\n")
-  
-  DE_results_NO_NA_SIG$ENTREZID <- mapIds(org.Hs.eg.db, keys=DE_results_NO_NA_SIG$gene, keytype="SYMBOL",
+  DE_results_NO_NA$ENTREZID <- mapIds(org.Hs.eg.db, keys=DE_results_NO_NA$gene, keytype="SYMBOL",
                             column="ENTREZID", multiVals=multiVals)
   
-  cat("DE_results_NO_NA_SIG_2\n")
-  str(DE_results_NO_NA_SIG)
+  
+  cat("DE_results_NO_NA_2\n")
+  str(DE_results_NO_NA)
+  cat("\n")
+  
+  
+  DE_results_NO_NA_with_ENTREZ<-DE_results_NO_NA[-which(DE_results_NO_NA$ENTREZID == "NA"),]
+  
+  cat("DE_results_NO_NA_with_ENTREZ_0\n")
+  str(DE_results_NO_NA_with_ENTREZ)
   cat("\n")
   
   
   # LOOP per contrast and cell type -----------------------------------------------------------------
   
   
-  array_contrasts<-unique(DE_results_NO_NA_SIG$contrast)
+  array_contrasts<-unique(DE_results_NO_NA_with_ENTREZ$contrast)
   
   cat("array_contrasts\n")
   str(array_contrasts)
   cat("\n")
   
-  array_cell_types<-unique(DE_results_NO_NA_SIG$cell_type)
+  array_cell_types<-unique(DE_results_NO_NA_with_ENTREZ$cell_type)
   
   cat("array_cell_types\n")
   str(array_cell_types)
@@ -265,10 +258,7 @@ GSEA_function = function(option_list)
   
   FINAL_results<-data.frame()
   
-  
-  #### key option in the GSEA https://github.com/YuLab-SMU/clusterProfiler/issues/283 -------------------------------------
-  
-  options(enrichment_force_universe=TRUE)
+  List_FINAL<-list()
   
   
   for(i in 1:length(array_contrasts)){
@@ -283,6 +273,8 @@ GSEA_function = function(option_list)
     cat(sprintf(as.character(contrast_sel)))
     cat("\n")
     
+    List_cell_types<-list()
+    
     for(k in 1:length(array_cell_types)){
       
       results_per_cell_type<-data.frame()
@@ -296,30 +288,31 @@ GSEA_function = function(option_list)
       cat(sprintf(as.character(cell_type_sel)))
       cat("\n")
       
-      DE_results_NO_NA_SIG_sel<-DE_results_NO_NA_SIG[which(DE_results_NO_NA_SIG$contrast == contrast_sel & DE_results_NO_NA_SIG$cell_type == cell_type_sel),]
+      DE_results_NO_NA_with_ENTREZ_sel<-DE_results_NO_NA_with_ENTREZ[which(DE_results_NO_NA_with_ENTREZ$contrast == contrast_sel & DE_results_NO_NA_with_ENTREZ$cell_type == cell_type_sel),]
       
-      if(dim(DE_results_NO_NA_SIG_sel)[1] > 0){
+      if(dim(DE_results_NO_NA_with_ENTREZ_sel)[1] > 0){
         
         if(DEBUG ==1){
           
-          cat("DE_results_NO_NA_SIG_sel_0\n")
-          cat(str(DE_results_NO_NA_SIG_sel))
-          cat("\n")
-        }
-        
-        # Split the dataframe into a list of sub-dataframes: upregulated, downregulated genes
-        
-        deg_results_list <- split(DE_results_NO_NA_SIG_sel, DE_results_NO_NA_SIG_sel$diffexpressed)
-        
-        if(DEBUG ==1){
-          
-          cat("deg_results_list_0\n")
-          cat(str(deg_results_list))
+          cat("DE_results_NO_NA_with_ENTREZ_sel_0\n")
+          cat(str(DE_results_NO_NA_with_ENTREZ_sel))
           cat("\n")
         }
         
         
         
+
+        DE_results_NO_NA_with_ENTREZ_sel_ordered<-DE_results_NO_NA_with_ENTREZ_sel[order(DE_results_NO_NA_with_ENTREZ_sel$log2FoldChange, decreasing=TRUE),]
+        
+        if(DEBUG ==1){
+          
+          cat("DE_results_NO_NA_with_ENTREZ_sel_ordered_0\n")
+          cat(str(DE_results_NO_NA_with_ENTREZ_sel_ordered))
+          cat("\n")
+        }
+        
+        
+        List_bg_files<-list()
         
         
         for(iteration_bg_files in 1:length(bg_files)){
@@ -374,8 +367,8 @@ GSEA_function = function(option_list)
             }
             
             universe<-unique(HPO$gene)
-            minGSSize_spec<-1
-            maxGSSize_spec<-5000
+            minGSSize_spec<-10
+            maxGSSize_spec<-500
             # universe<-unique(selected_collection_df$gene)
             
           }
@@ -397,42 +390,41 @@ GSEA_function = function(option_list)
             
             #### Key function of GSEA -----------------------------------------------
             
+            geneList<-DE_results_NO_NA_with_ENTREZ_sel_ordered$log2FoldChange
             
-            res<-lapply(names(deg_results_list),
-                        function(x) enricher(gene= deg_results_list[[x]]$ENTREZID, 
-                                             TERM2GENE = selected_collection_df_sel, 
-                                             universe=universe,
-                                             maxGSSize=maxGSSize_spec,
-                                             minGSSize=minGSSize_spec,
-                                             pvalueCutoff = 0.05,
-                                             pAdjustMethod = "BH",
-                                             qvalueCutoff = 0.25))
+            names(geneList)<-DE_results_NO_NA_with_ENTREZ_sel_ordered$ENTREZID
             
             
+            if(DEBUG ==1){
+              
+              cat("geneList_0\n")
+              str(geneList)
+              cat("\n")
+            }
             
-            names(res) <- names(deg_results_list)
+            
+            
+            res = GSEA(geneList, 
+                       TERM2GENE=selected_collection_df_sel,                            
+                       maxGSSize=maxGSSize_spec,
+                       minGSSize=minGSSize_spec,
+                       pvalueCutoff = 0.05,
+                       pAdjustMethod = "BH")
+            
+            
+            
             
             if(DEBUG ==1){
               
               cat("res_0\n")
-              #str(res)
+              # str(res)
               cat("\n")
             }
             
-            ### Filter null results
             
-            filtered<-Filter(Negate(is.null), res)
+            res_df <- res@result
             
-            if(DEBUG ==1){
-              cat("filtered_0\n")
-              #str(filtered)
-              cat("\n")
-            }
-            
-            if(length(filtered) > 0){
-              
-              res_df <- lapply(names(filtered), 
-                               function(x) rbind(filtered[[x]]@result))
+            if(dim(res_df)[1] >0){
               
               if(DEBUG ==1){
                 
@@ -441,26 +433,7 @@ GSEA_function = function(option_list)
                 cat("\n")
               }
               
-              names(res_df) <- names(filtered)
-              
-              if(DEBUG ==1){
-                
-                cat("res_df_1\n")
-                str(res_df)
-                cat("\n")
-              }
-              
-              res_df <- do.call(rbind, res_df)
-              
-              if(DEBUG ==1){
-                
-                cat("res_df_2\n")
-                str(res_df)
-                cat("\n")
-              }
-              
-              res_df <- res_df %>% mutate(minuslog10padj = -log10(p.adjust),
-                                          diffexpressed = gsub('\\..+$', '', rownames(res_df)))                    
+              res_df <- res_df %>% mutate(minuslog10padj = -log10(p.adjust))
               
               if(DEBUG ==1){
                 
@@ -469,52 +442,60 @@ GSEA_function = function(option_list)
                 cat("\n")
               }
               
-              
-              
               res_df_long<-unique(as.data.frame(cSplit(res_df,sep = '/', direction = "long",
-                                                       splitCols = "geneID"),stringsAsFactors=F))
+                                                       splitCols = "core_enrichment"),stringsAsFactors=F))
+              
+              
+              
+              if(DEBUG ==1){
+                str(res_df_long)
+                cat("\n")
+              }
               
               if(dim(res_df_long)[1] >0){
                 
-                res_df_long$geneID<-as.character(res_df_long$geneID)
+                res_df_long$core_enrichment<-as.character(res_df_long$core_enrichment)
                 
                 if(DEBUG ==1){
                   str(res_df_long)
                   cat("\n")
                 }
                 
-                res_df_long$geneID <- mapIds(org.Hs.eg.db, keys=res_df_long$geneID, keytype="ENTREZID",
-                                             column="SYMBOL", multiVals=multiVals)
+                res_df_long$core_enrichment <- mapIds(org.Hs.eg.db, keys=res_df_long$core_enrichment, keytype="ENTREZID",
+                                                      column="SYMBOL", multiVals=multiVals)
                 
-                if(DEBUG ==1){
-                  str(res_df_long)
-                  cat("\n")
-                }
-                
-                res_df_long.dt<-data.table(res_df_long, key=colnames(res_df_long)[-which(colnames(res_df_long) == 'geneID')])
+                res_df_long.dt<-data.table(res_df_long, key=colnames(res_df_long)[-which(colnames(res_df_long) == 'core_enrichment')])
                 
                 
-                res_df_long_collapsed<-as.data.frame(res_df_long.dt[,.(geneID=paste(geneID, collapse='/')), by=key(res_df_long.dt)], stringsAsFactors=F)
+                res_df_long_collapsed<-as.data.frame(res_df_long.dt[,.(core_enrichment=paste(core_enrichment, collapse='/')), by=key(res_df_long.dt)], stringsAsFactors=F)
                 
                 if(DEBUG ==1){
                   str(res_df_long_collapsed)
                   cat("\n")
                 }
                 
+                results_per_cell_type<-rbind(res_df_long_collapsed, results_per_cell_type)             
                 
                 
-                results_per_cell_type<-rbind(res_df_long_collapsed, results_per_cell_type)          
                 
               }else{
                 
-                results_per_cell_type<-rbind(res_df, results_per_cell_type)          
+                
+                results_per_cell_type<-rbind(res_df, results_per_cell_type)             
                 
               }# dim(res_df_long)[1] >0
               
-                 
+              
+              List_bg_files[[selected_collection]]<-res
+              
+              names(List_bg_files)<-gsub("\\.entrez_selected\\.rds$","",gsub(paste(out_path,'/',sep=""),"",names(List_bg_files)))
               
               
-            }# length(filtered) > 0     
+              
+            }#dim(res_df)[1] >0
+            
+            
+            
             
             
           }# length(total_matches) > 1
@@ -543,10 +524,6 @@ GSEA_function = function(option_list)
             cat("\n")
             cat(sprintf(as.character(summary(as.factor(results_per_cell_type$contrast)))))
             cat("\n")
-            cat(sprintf(as.character(names(summary(as.factor(results_per_cell_type$diffexpressed))))))
-            cat("\n")
-            cat(sprintf(as.character(summary(as.factor(results_per_cell_type$diffexpressed)))))
-            cat("\n")
             cat(sprintf(as.character(names(summary(as.factor(results_per_cell_type$ID))))))
             cat("\n")
             cat(sprintf(as.character(summary(as.factor(results_per_cell_type$ID)))))
@@ -556,11 +533,14 @@ GSEA_function = function(option_list)
           
           results_per_contrast<-rbind(results_per_cell_type,results_per_contrast)
           
+          List_cell_types[[cell_type_sel]]<-List_bg_files
+          
+          
         }# dim(results_per_cell_type)[1] >0    
         
         
         
-      }# dim(DE_results_NO_NA_SIG_sel)[1] > 0
+      }# dim(DE_results_NO_NA_with_ENTREZ_sel)[1] > 0
       
       
       
@@ -591,6 +571,9 @@ GSEA_function = function(option_list)
       
       FINAL_results<-rbind(results_per_contrast,FINAL_results)
       
+      List_FINAL[[contrast_sel]]<-List_cell_types
+      
+      
     }# dim(results_per_contrast)[1] >0                     
     
     
@@ -610,6 +593,15 @@ GSEA_function = function(option_list)
   
   
   FINAL_results_SIG<-FINAL_results[which(FINAL_results$p.adjust <= pval_threshold),]
+  
+  FINAL_results_SIG$contrast<-factor(FINAL_results_SIG$contrast,
+                                     levels=rev(array_contrasts),
+                                     ordered=T)
+  
+  FINAL_results_SIG$cell_type<-factor(FINAL_results_SIG$cell_type,
+                                     levels=rev(array_cell_types),
+                                     ordered=T)
+  
   
   cat("FINAL_results_SIG\n")
   str(FINAL_results_SIG)
@@ -633,8 +625,179 @@ GSEA_function = function(option_list)
   
   write.table(FINAL_results_SIG, file="GSEA_results_significant.tsv", sep="\t", quote=F, row.names = F)
   
- 
+  saveRDS(List_FINAL, file="GSEA_complete_results.rds")
   
+  saveRDS(FINAL_results_SIG, file="GSEA_results_significant.rds")
+  
+  
+  
+}
+
+Leading_edge_printer = function(option_list)
+{
+  
+  opt_in = option_list
+  opt <<- option_list
+  
+  cat("All options:\n")
+  printList(opt)
+  
+  
+  #### READ and transform type ----
+  
+  type = opt$type
+  
+  cat("TYPE_\n")
+  cat(sprintf(as.character(type)))
+  cat("\n")
+  
+  
+  #### READ and transform out ----
+  
+  out = opt$out
+  
+  cat("OUT_\n")
+  cat(sprintf(as.character(out)))
+  cat("\n")
+  
+  
+  
+  #### READ GSEA_complete_results.rds ----
+
+  
+  GSEA_dir<-paste0(out,'/','GSEA','/')
+  
+  
+  setwd(GSEA_dir)
+  
+  
+  List_GSEA<-readRDS(file="GSEA_complete_results.rds")
+  
+  cat("List_GSEA_0\n")
+  # str(List_GSEA)
+  cat("\n")
+  
+  
+  
+  Leading_edge_plots_dir<-paste0(GSEA_dir,'Leading_edge_plots','/')
+  
+  if(file.exists(Leading_edge_plots_dir)){
+    
+    unlink(Leading_edge_plots_dir, recursive =T)
+    
+    dir.create(Leading_edge_plots_dir)
+  }else{
+    
+    dir.create(Leading_edge_plots_dir)
+  }
+  
+  
+  cat("Leading_edge_plots_dir_0\n")
+  cat(sprintf(as.character(Leading_edge_plots_dir)))
+  cat("\n")
+  
+  
+  #### iterate through the the list of lists -----
+  
+  
+  array_contrasts<-names(List_GSEA)
+  
+  cat("array_contrasts_0\n")
+  str(array_contrasts)
+  cat("\n")
+  
+  
+  for(i in 1:length(array_contrasts))
+  {
+    
+    array_contrasts_sel<-array_contrasts[i]
+    
+    
+    cat("------------------------------------->\t")
+    cat(sprintf(as.character(array_contrasts_sel)))
+    cat("\n")
+    
+    
+    List_GSEA_sel<-List_GSEA[[array_contrasts_sel]]
+    
+    
+    array_cell_types<-names(List_GSEA_sel)
+    
+    cat("array_cell_types_0\n")
+    str(array_cell_types)
+    cat("\n")
+    
+    for(k in 1:length(array_cell_types))
+    {
+      
+      array_cell_types_sel<-array_cell_types[k]
+      
+      
+      cat("----------->\t")
+      cat(sprintf(as.character(array_cell_types_sel)))
+      cat("\n")
+      
+      List_GSEA_sel_cell_type_sel<-List_GSEA_sel[[array_cell_types_sel]]
+      
+      array_collections<-names(List_GSEA_sel_cell_type_sel)
+      
+      cat("array_collections_0\n")
+      str(array_collections)
+      cat("\n")
+      
+      for(h in 1:length(array_collections)){
+        
+        array_collections_sel<-array_collections[h]
+        
+        
+        cat("--->\t")
+        cat(sprintf(as.character(array_collections_sel)))
+        cat("\n")
+        
+        List_GSEA_sel_cell_type_sel_collection_sel<-List_GSEA_sel_cell_type_sel[[array_collections_sel]]
+        
+        array_gene_sets<-List_GSEA_sel_cell_type_sel_collection_sel$Description
+        
+        cat("array_gene_sets_0\n")
+        str(array_gene_sets)
+        cat("\n")
+        
+        for(l in 1:length(array_gene_sets)){
+          
+          array_gene_sets_sel<-array_gene_sets[l]
+          
+          
+          cat(">\t")
+          cat(sprintf(as.character(array_gene_sets_sel)))
+          cat("\n")
+          
+          
+          
+          
+          Leading_edge_plot<-gseaplot(List_GSEA_sel_cell_type_sel_collection_sel, geneSetID = l, title = List_GSEA_sel_cell_type_sel_collection_sel@result$Description[l])
+          
+          
+          
+          setwd(Leading_edge_plots_dir)
+          
+          svgname<-paste(paste(array_contrasts_sel,array_cell_types_sel,array_gene_sets_sel, sep='_'),'.svg', sep='')
+          
+          
+          makesvg = TRUE
+          
+          if (makesvg == TRUE)
+          {
+            ggsave(svgname, plot= Leading_edge_plot,
+                   device="svg")
+          }
+          
+          
+          
+          
+        }#l in 1:length(array_gene_sets
+      }# h in 1:length(array_collections)
+    }#k in 1:length(array_cell_types)
+  }# i in 1:length(array_contrasts)
   
 }
 
@@ -681,16 +844,16 @@ Lolliplot_and_gene_annotation = function(option_list)
   setwd(GSEA_dir)
   
 
-  GSEA_result<-read.table(file="GSEA_results_significant.tsv", sep="\t", header=TRUE)
+  GSEA_result<-readRDS(file="GSEA_results_significant.rds")
   
   cat("GSEA_result_0\n")
   str(GSEA_result)
   cat("\n")
   
-  # Maximize pvalue by ID, diffexpressed, cell_type, contrast -----------------------------------
+  # Maximize pvalue by ID, cell_type, contrast -----------------------------------
   
   
-  GSEA_result.dt<-data.table(GSEA_result, key=c("ID","diffexpressed","cell_type","contrast"))
+  GSEA_result.dt<-data.table(GSEA_result, key=c("ID","cell_type","contrast"))
   
   GSEA_result_MAX<-as.data.frame(GSEA_result.dt[,.SD[which.max(minuslog10padj)],by=key(GSEA_result.dt)], stringsAsFactors=F)
   
@@ -729,32 +892,51 @@ Lolliplot_and_gene_annotation = function(option_list)
   
   ## Annotate genes in pathways ------------------------------------------
   
-  indx<-c(which(colnames(GSEA_result_MAX)%in%c('ID','diffexpressed','cell_type','geneID','PATH_class')))
+  ind.dep<-which(colnames(GSEA_result_MAX)%in%c('core_enrichment'))
   
-  GSEA_result_MAX_sub<-unique(GSEA_result_MAX[,indx])
   
-  cat("GSEA_result_MAX_sub_0\n")
-  str(GSEA_result_MAX_sub)
+  GSEA_result_MAX.dt<-data.table(GSEA_result_MAX, key=colnames(GSEA_result_MAX)[-ind.dep])
+  
+  
+  
+  GSEA_result_MAX_with_count<-as.data.frame(GSEA_result_MAX.dt[,.(core_enrichment = core_enrichment,
+                                                                  Count=length(unlist(strsplit(core_enrichment, split='/')))), by=key(GSEA_result_MAX.dt)], stringAsFactors=F)
+  
+
+  cat("GSEA_result_MAX_with_count_0\n")
+  str(GSEA_result_MAX_with_count)
   cat("\n")
   
-  GSEA_result_MAX_sub_long<-unique(as.data.frame(cSplit(GSEA_result_MAX_sub,sep = '/', direction = "long",
-                                                        splitCols = "geneID") , stringsAsFactors=F))
   
-  colnames(GSEA_result_MAX_sub_long)[which(colnames(GSEA_result_MAX_sub_long) == 'geneID')]<-'gene'
   
-  cat("GSEA_result_MAX_sub_long_0\n")
-  str(GSEA_result_MAX_sub_long)
+  ## Annotate genes in pathways ------------------------------------------
+  
+  indx<-c(which(colnames(GSEA_result_MAX_with_count)%in%c('ID','cell_type','core_enrichment','PATH_class')))
+  
+  GSEA_result_MAX_with_count_sub<-unique(GSEA_result_MAX_with_count[,indx])
+  
+  cat("GSEA_result_MAX_with_count_sub_0\n")
+  str(GSEA_result_MAX_with_count_sub)
   cat("\n")
   
-  GSEA_result_MAX_sub_long.dt<-data.table(GSEA_result_MAX_sub_long, key=c('gene','cell_type','diffexpressed','PATH_class'))
+  GSEA_result_MAX_with_count_sub_long<-unique(as.data.frame(cSplit(GSEA_result_MAX_with_count_sub,sep = '/', direction = "long",
+                                                        splitCols = "core_enrichment") , stringsAsFactors=F))
   
-  gene_annotation<-as.data.frame(GSEA_result_MAX_sub_long.dt[,.(string_ID=paste(unique(ID), collapse='|')), by=key(GSEA_result_MAX_sub_long.dt)], stringsAsFactors=F)
+  colnames(GSEA_result_MAX_with_count_sub_long)[which(colnames(GSEA_result_MAX_with_count_sub_long) == 'core_enrichment')]<-'gene'
+  
+  cat("GSEA_result_MAX_with_count_sub_long_0\n")
+  str(GSEA_result_MAX_with_count_sub_long)
+  cat("\n")
+  
+  GSEA_result_MAX_with_count_sub_long.dt<-data.table(GSEA_result_MAX_with_count_sub_long, key=c('gene','cell_type','PATH_class'))
+  
+  gene_annotation<-as.data.frame(GSEA_result_MAX_with_count_sub_long.dt[,.(string_ID=paste(unique(ID), collapse='|')), by=key(GSEA_result_MAX_with_count_sub_long.dt)], stringsAsFactors=F)
   
   cat("gene_annotation_0\n")
   str(gene_annotation)
   cat("\n")
   
-  gene_annotation_wide<-as.data.frame(pivot_wider(gene_annotation, id_cols=c('gene','cell_type','diffexpressed'), names_from=PATH_class, values_from=string_ID), stringsAsFactors=F)
+  gene_annotation_wide<-as.data.frame(pivot_wider(gene_annotation, id_cols=c('gene','cell_type'), names_from=PATH_class, values_from=string_ID), stringsAsFactors=F)
   
   cat("gene_annotation_wide_0\n")
   str(gene_annotation_wide)
@@ -766,138 +948,120 @@ Lolliplot_and_gene_annotation = function(option_list)
   
   ### Lolliplot -----------------------
   
-  GSEA_result_MAX$PATH_class<-factor(as.character(GSEA_result_MAX$PATH_class), levels=rev(c('TF_targets','other')), ordered=T)
+  GSEA_result_MAX_with_count$PATH_class<-factor(as.character(GSEA_result_MAX_with_count$PATH_class), levels=rev(c('TF_targets','other')), ordered=T)
   
   
-  cat("GSEA_result_MAX_REMEMBER\n")
-  str(GSEA_result_MAX)
+  cat("GSEA_result_MAX_with_count_REMEMBER\n")
+  str(GSEA_result_MAX_with_count)
   cat("\n")
   
   
-  array_diffexpressed<-unique(GSEA_result_MAX$diffexpressed)
-  
-  cat("array_diffexpressed_0\n")
-  str(array_diffexpressed)
-  cat("\n")
-  
-  
+ 
   
   DEBUG<-1
   
+  GSEA_result_MAX_with_count_Thresholded<-GSEA_result_MAX_with_count[which(GSEA_result_MAX_with_count$Count >= Threshold_number_of_genes),]
   
-  for(i in 1:length(array_diffexpressed)){
+  
+  cat("GSEA_result_MAX_with_count_Thresholded_REMEMBER\n")
+  str(GSEA_result_MAX_with_count_Thresholded)
+  cat("\n")
+  
+  GSEA_result_MAX_with_count_Thresholded<-GSEA_result_MAX_with_count_Thresholded[order(GSEA_result_MAX_with_count_Thresholded$PATH_class),]
+  
+  levels_ID<-unique(as.character(GSEA_result_MAX_with_count_Thresholded$ID))
+  
+  GSEA_result_MAX_with_count_Thresholded$DUMMY<-factor(GSEA_result_MAX_with_count_Thresholded$ID, levels=levels_ID, ordered=T)
+  
+  if(DEBUG ==1){
     
-    array_diffexpressed_sel<-array_diffexpressed[i]
-    
-    cat("--------------------------->\t")
-    cat(sprintf(array_diffexpressed_sel))
+    cat("GSEA_result_MAX_with_count_Thresholded_0\n")
+    str(GSEA_result_MAX_with_count_Thresholded)
     cat("\n")
-    
-    GSEA_result_MAX_sel<-GSEA_result_MAX[which(GSEA_result_MAX$diffexpressed == array_diffexpressed_sel & GSEA_result_MAX$Count >= Threshold_number_of_genes),]
-    
-    GSEA_result_MAX_sel<-GSEA_result_MAX_sel[order(GSEA_result_MAX_sel$PATH_class),]
-    
-    levels_ID<-unique(as.character(GSEA_result_MAX_sel$ID))
-    
-    GSEA_result_MAX_sel$DUMMY<-factor(GSEA_result_MAX_sel$ID, levels=levels_ID, ordered=T)
-    
-    if(DEBUG ==1){
-      
-      cat("GSEA_result_MAX_sel_0\n")
-      str(GSEA_result_MAX_sel)
-      cat("\n")
-    }
-    
-    color_selected<-NA
-    
-    if(array_diffexpressed_sel == 'UP'){
-      
-      color_selected<-'red'
-      
-    }else{
-      
-      if(array_diffexpressed_sel == 'DOWN'){
-        
-        color_selected<-'blue'
-        
-      }
-    }#array_diffexpressed_sel == 'UP'
-    
-    if(DEBUG ==1){
-      
-      cat("color_selected_0\n")
-      str(color_selected)
-      cat("\n")
-    }
-    
-    breaks_gene_sets<-as.numeric(GSEA_result_MAX_sel$DUMMY)
-    labels_gene_sets<-as.character(gsub("\\..+$","",GSEA_result_MAX_sel$DUMMY))
-    
-    
-    Gene_set_lolliplot<-ggplot(data=GSEA_result_MAX_sel, 
-                               aes(y=as.numeric(DUMMY),
-                                   x=minuslog10padj)) +
-      geom_segment(data=GSEA_result_MAX_sel,
-                   aes(y=as.numeric(DUMMY),
-                       yend=as.numeric(DUMMY),
-                       x=0,
-                       xend=minuslog10padj),
-                   color=color_selected,
-                   size=0.8)+
-      geom_point(size=5, stroke=1, shape=21, color=color_selected, fill="white")+
-      geom_text(data=GSEA_result_MAX_sel,
-                aes(x=minuslog10padj, y=as.numeric(DUMMY), label=Count),color="black",size=2, family="sans",fontface="bold")
-    
-    
-    Gene_set_lolliplot <-Gene_set_lolliplot+
-      theme_cowplot(font_size = 2,
-                    font_family = "sans")+
-      facet_grid(. ~ contrast+cell_type, scales='free_x', space='free_x', switch="y", drop=TRUE)+
-      theme( strip.background = element_blank(),
-             strip.placement = "outside",
-             strip.text = element_text(size=5,color="black", family="sans"),
-             panel.spacing = unit(0.2, "lines"),
-             panel.background=element_rect(fill="white"),
-             panel.border=element_rect(colour="white",size=0,5),
-             panel.grid.major = element_blank(),
-             panel.grid.minor = element_blank())+
-      scale_x_continuous(name='-log10pval')+
-      scale_y_continuous(name=NULL, breaks=breaks_gene_sets,
-                         labels=labels_gene_sets)+
-      theme_classic()+
-      theme(axis.title=element_blank(),
-            axis.title.y=element_blank(),
-            axis.title.x=element_text(size=8,color="black", family="sans"),
-            axis.text.y=element_text(size=6,color="black", family="sans", face='bold'),
-            axis.text.x=element_text(size=6,color="black", family="sans"),
-            axis.line.x = element_line(size = 0.4),
-            axis.ticks.x = element_line(size = 0.4),
-            axis.ticks.y = element_line(size = 0.4),
-            axis.line.y = element_line(size = 0.4))+
-      theme(legend.title = element_blank(),
-            legend.text = element_text(size=6),
-            legend.key.size = unit(0.5, 'cm'), #change legend key size
-            legend.key.height = unit(0.5, 'cm'), #change legend key height
-            legend.key.width = unit(0.5, 'cm'), #change legend key width
-            legend.position="bottom")+
-      guides(fill=guide_legend(nrow=1,byrow=TRUE))
-    
-    
-    setwd(GSEA_dir)
-    
-    svgname<-paste(paste("Lolliplot",array_diffexpressed_sel,sep='_'),".svg",sep='')
-    makesvg = TRUE
-    
-    if (makesvg == TRUE)
-    {
-      ggsave(svgname, plot= Gene_set_lolliplot,
-             device="svg")
-    }
-    
-    
-    
-  }#for(i in 1:length(array_diffexpressed))
+  }
   
+  
+  
+  
+ 
+  
+  
+  breaks_gene_sets<-as.numeric(GSEA_result_MAX_with_count_Thresholded$DUMMY)
+  labels_gene_sets<-as.character(gsub("\\..+$","",GSEA_result_MAX_with_count_Thresholded$DUMMY))
+  
+  
+  Gene_set_lolliplot<-ggplot(data=GSEA_result_MAX_with_count_Thresholded, 
+                             aes(y=as.numeric(DUMMY),
+                                 x=minuslog10padj)) +
+    geom_segment(data=GSEA_result_MAX_with_count_Thresholded[which(GSEA_result_MAX_with_count_Thresholded$minuslog10padj > 0), ],
+                 aes(y=as.numeric(DUMMY),
+                     yend=as.numeric(DUMMY),
+                     x=0,
+                     xend=minuslog10padj,
+                     color=NES),
+                 size=0.8)+
+    geom_point(data=GSEA_result_MAX_with_count_Thresholded[which(GSEA_result_MAX_with_count_Thresholded$minuslog10padj > 0), ],
+               aes(color=NES),size=5, stroke=1, shape=21,fill="white")+
+    geom_text(data=GSEA_result_MAX_with_count_Thresholded[which(GSEA_result_MAX_with_count_Thresholded$minuslog10padj > 0), ],
+              aes(x=minuslog10padj, y=as.numeric(DUMMY), label=Count),color="black",size=2, family="sans",fontface="bold")+
+  geom_segment(data=GSEA_result_MAX_with_count_Thresholded[which(GSEA_result_MAX_with_count_Thresholded$minuslog10padj < 0), ],
+               aes(y=as.numeric(DUMMY),
+                   yend=as.numeric(DUMMY),
+                   x=0,
+                   xend=minuslog10padj,
+                   color=NES),
+               size=0.8)+
+    geom_point(data=GSEA_result_MAX_with_count_Thresholded[which(GSEA_result_MAX_with_count_Thresholded$minuslog10padj < 0), ],
+               aes(color=NES), stroke=1, shape=21, fill="white")+
+    geom_text(data=GSEA_result_MAX_with_count_Thresholded[which(GSEA_result_MAX_with_count_Thresholded$minuslog10padj < 0), ],
+              aes(x=minuslog10padj, y=as.numeric(DUMMY), label=Count),color="black",size=2, family="sans",fontface="bold")+
+    scale_color_gradient2(name=paste("Normalized","Enrichment","Score", sep="\n"),
+                          low = "blue", high = "red",mid="white",midpoint=0,
+                          na.value = NA)
+  
+  
+  Gene_set_lolliplot <-Gene_set_lolliplot+
+    theme_cowplot(font_size = 2,
+                  font_family = "sans")+
+    facet_grid(. ~ contrast+cell_type, scales='free_x', space='free_x', switch="y", drop=TRUE)+
+    theme( strip.background = element_blank(),
+           strip.placement = "outside",
+           strip.text = element_text(size=5,color="black", family="sans"),
+           panel.spacing = unit(0.2, "lines"),
+           panel.background=element_rect(fill="white"),
+           panel.border=element_rect(colour="white",size=0,5),
+           panel.grid.major = element_blank(),
+           panel.grid.minor = element_blank())+
+    scale_x_continuous(name='-log10pval')+
+    scale_y_continuous(name=NULL, breaks=breaks_gene_sets,
+                       labels=labels_gene_sets)+
+    theme_classic()+
+    theme(axis.title=element_blank(),
+          axis.title.y=element_blank(),
+          axis.title.x=element_text(size=12,color="black", family="sans"),
+          axis.text.y=element_text(size=10,color="black", family="sans", face='bold'),
+          axis.text.x=element_text(size=10,color="black", family="sans"))+
+    theme(legend.title = element_text(size=12),
+          legend.text = element_text(size=10),
+          legend.key.size = unit(0.5, 'cm'), #change legend key size
+          legend.key.height = unit(0.5, 'cm'), #change legend key height
+          legend.key.width = unit(0.5, 'cm'), #change legend key width
+          legend.position="right")
+  
+  
+  setwd(GSEA_dir)
+  
+  svgname<-paste(paste("Lolliplot",'GSEA',sep='_'),".svg",sep='')
+  makesvg = TRUE
+  
+  if (makesvg == TRUE)
+  {
+    ggsave(svgname, plot= Gene_set_lolliplot,
+           device="svg", width=13)
+  }
+  
+  
+ 
 }
 
 
@@ -956,6 +1120,7 @@ main = function() {
   opt <<- parse_args(parser)
   
   GSEA_function(opt)
+  Leading_edge_printer(opt)
   Lolliplot_and_gene_annotation(opt)
   
   

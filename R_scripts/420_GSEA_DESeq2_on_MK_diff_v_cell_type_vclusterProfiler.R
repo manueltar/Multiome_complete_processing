@@ -322,7 +322,7 @@ GSEA_function = function(option_list)
           selected_collection<-bg_files[iteration_bg_files]
           
           
-          cat("--->\t")
+          cat("--------------------------------------------------------------------->\t")
           cat(sprintf(as.character(iteration_bg_files)))
           cat("\t")
           cat(sprintf(as.character(selected_collection)))
@@ -338,20 +338,21 @@ GSEA_function = function(option_list)
           }
           
           
-          FLAG_Dorothea<-length((grep("Dorothea_", selected_collection)))
+          FLAG_custom<-length(grep(paste("Dorothea_","Custom_Soranzo_", sep="|"), selected_collection))
           
-          if(DEBUG ==1){
-            
-            cat("FLAG_Dorothea_0\n")
-            str(FLAG_Dorothea)
-            cat("\n")
-          }
           
-          if(FLAG_Dorothea == 0){
+          
+          cat("FLAG_custom_0\n")
+          str(FLAG_custom)
+          cat("\n")
+          
+          if(FLAG_custom == 0){
             
             universe<-unique(selected_collection_df$gene)
             minGSSize_spec<-10
             maxGSSize_spec<-500
+            DEBUG<-0
+            
             
           }else{
             
@@ -367,8 +368,17 @@ GSEA_function = function(option_list)
             }
             
             universe<-unique(HPO$gene)
-            minGSSize_spec<-10
+            minGSSize_spec<-5
             maxGSSize_spec<-500
+            
+            DEBUG<-1
+            
+            if(DEBUG ==1){
+              
+              cat("selected_collection_df_0\n")
+              str(selected_collection_df)
+              cat("\n")
+            }
             # universe<-unique(selected_collection_df$gene)
             
           }
@@ -387,6 +397,14 @@ GSEA_function = function(option_list)
           if(length(total_matches) > 1){
             
             selected_collection_df_sel<-selected_collection_df[total_matches,]
+            
+            
+            if(DEBUG ==1){
+              
+              cat("selected_collection_df_sel_0\n")
+              str(selected_collection_df_sel)
+              cat("\n")
+            }
             
             #### Key function of GSEA -----------------------------------------------
             
@@ -442,17 +460,19 @@ GSEA_function = function(option_list)
                 cat("\n")
               }
               
-              res_df_long<-unique(as.data.frame(cSplit(res_df,sep = '/', direction = "long",
-                                                       splitCols = "core_enrichment"),stringsAsFactors=F))
+              
+              FLAG_ZERO<-length(which(unique(res_df$core_enrichment) == ""))
               
               
+              cat("FLAG_ZERO_0\n")
+              str(FLAG_ZERO)
+              cat("\n")
               
-              if(DEBUG ==1){
-                str(res_df_long)
-                cat("\n")
-              }
               
-              if(dim(res_df_long)[1] >0){
+              if(FLAG_ZERO == 0){
+                
+                res_df_long<-unique(as.data.frame(cSplit(res_df,sep = '/', direction = "long",
+                                                         splitCols = "core_enrichment"),stringsAsFactors=F))
                 
                 res_df_long$core_enrichment<-as.character(res_df_long$core_enrichment)
                 
@@ -462,7 +482,12 @@ GSEA_function = function(option_list)
                 }
                 
                 res_df_long$core_enrichment <- mapIds(org.Hs.eg.db, keys=res_df_long$core_enrichment, keytype="ENTREZID",
-                                                      column="SYMBOL", multiVals=multiVals)
+                                             column="SYMBOL", multiVals=multiVals)
+                
+                if(DEBUG ==1){
+                  str(res_df_long)
+                  cat("\n")
+                }
                 
                 res_df_long.dt<-data.table(res_df_long, key=colnames(res_df_long)[-which(colnames(res_df_long) == 'core_enrichment')])
                 
@@ -474,17 +499,21 @@ GSEA_function = function(option_list)
                   cat("\n")
                 }
                 
-                results_per_cell_type<-rbind(res_df_long_collapsed, results_per_cell_type)             
                 
                 
+                results_per_cell_type<-rbind(res_df_long_collapsed, results_per_cell_type)     
                 
               }else{
                 
+                results_per_cell_type<-rbind(res_df, results_per_cell_type)          
                 
-                results_per_cell_type<-rbind(res_df, results_per_cell_type)             
                 
-              }# dim(res_df_long)[1] >0
+                
+              }# FLAG_ZERO == 0
               
+              ##########
+              
+             
               
               List_bg_files[[selected_collection]]<-res
               

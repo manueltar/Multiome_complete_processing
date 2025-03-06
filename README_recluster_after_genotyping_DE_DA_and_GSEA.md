@@ -19,6 +19,14 @@ explore_subclustering.ipynb
 
 explore_subclustering.ipynb
 
+# To add specific transcription factor target gene sets from Dorothea run and copy them to the gmt folder (/home/manuel.tardaguila/GMT_files/msigdb_v2023.1.Hs_files_to_download_locally_ENTREZ/)
+
+$ bash ~/Scripts/Wraper_scripts/74_ORA_exploration.sh /group/soranzo/manuel.tardaguila/Paper_bits/ ORA_exploration
+
+# To add custom gene sets run and copy them to the gmt folder (/home/manuel.tardaguila/GMT_files/msigdb_v2023.1.Hs_files_to_download_locally_ENTREZ/)
+
+$ bash ~/Scripts/Wraper_scripts/142_custom_genesets.sh /group/soranzo/manuel.tardaguila/gene_sets/ custom_set_for_fibrosis
+
 # Ro run the GSEA and the ORA run:
 
 $ bash ~/Scripts/Wraper_scripts/135_GSEA_and_ORA_for_single_cell.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/Downstream_analysis_cluster_after_genotyping/ GSEA_ORA_hESC_Day_0 /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/Downstream_analysis_cluster_after_genotyping/DE_genes_cell_type_hESC_Day_0.tsv

@@ -294,7 +294,8 @@ volcano_plots_function = function(option_list)
                                   brewer.pal(8, "Dark2")[c(4)],
                                   brewer.pal(8, "Dark2")[c(5)],
                                   brewer.pal(8, "Dark2")[c(6)],
-                                  brewer.pal(8, "Dark2")[c(7)])
+                                  brewer.pal(8, "Dark2")[c(7)],
+                                  brewer.pal(8, "Dark2")[c(8)])
                                   
         
         names(vector_colors_identity)<-levels(annotation_col$identity)

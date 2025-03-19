@@ -571,7 +571,7 @@ ORA_function = function(option_list)
             
            
             minGSSize_spec<-1
-            maxGSSize_spec<-500
+            maxGSSize_spec<-600
             
             DEBUG<-1
             

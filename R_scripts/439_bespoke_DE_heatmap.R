@@ -192,7 +192,7 @@ heatmap_function_TFs = function(option_list)
       
       annotation_file_long_sel_identity_sel.dt<-data.table(annotation_file_long_sel_identity_sel, key='gene')
       
-      annotation_file_sel_collapsed<-as.data.frame(annotation_file_long_sel_identity_sel.dt[,.(TF_string=paste(TF_targets, collapse='|')), by=key(annotation_file_long_sel_identity_sel.dt)], stringsAsFactors=F)
+      annotation_file_sel_collapsed<-as.data.frame(annotation_file_long_sel_identity_sel.dt[,.(TF_string=paste(TF_targets, collapse="\n")), by=key(annotation_file_long_sel_identity_sel.dt)], stringsAsFactors=F)
       
       
       if(DEBUG == 1){
@@ -201,7 +201,13 @@ heatmap_function_TFs = function(option_list)
         cat("\n")
       }
       
-      annotation_file_sel_collapsed$TF_string<-factor(annotation_file_sel_collapsed$TF_string)
+      vector_of_TF_string<-unique(annotation_file_sel_collapsed$TF_string)
+      
+      rordered_unique_levels<-c(vector_of_TF_string[which(vector_of_TF_string%in%selected_annotations)],vector_of_TF_string[-which(vector_of_TF_string%in%selected_annotations)])
+      
+      annotation_file_sel_collapsed$TF_string<-factor(annotation_file_sel_collapsed$TF_string,
+                                                      levels=rordered_unique_levels,
+                                                      ordered=T)
       
       
       if(DEBUG == 1){
@@ -357,7 +363,8 @@ heatmap_function_TFs = function(option_list)
                                 brewer.pal(8, "Dark2")[c(4)],
                                 brewer.pal(8, "Dark2")[c(5)],
                                 brewer.pal(8, "Dark2")[c(6)],
-                                brewer.pal(8, "Dark2")[c(7)])
+                                brewer.pal(8, "Dark2")[c(7)],
+                                brewer.pal(8, "Dark2")[c(8)])
       
       
       names(vector_colors_identity)<-levels(annotation_col$identity)
@@ -488,11 +495,12 @@ heatmap_function_TFs = function(option_list)
       if(FLAG_log_pval == 1){
         selected_genes_after_heatmap_clustering<-heatmap$tree_row$labels[heatmap$tree_row$order]
         
-        if(DEBUG == 1){
-          cat("selected_genes_after_heatmap_clustering_0\n")
-          cat(str(selected_genes_after_heatmap_clustering))
-          cat("\n")
-        }
+        
+        cat("selected_genes_after_heatmap_clustering_0\n")
+        cat(str(selected_genes_after_heatmap_clustering))
+        cat("\n")
+        
+
         
         logpval_df<-DE_result_sel[which(DE_result_sel$gene%in%selected_genes_after_heatmap_clustering),]
         
@@ -718,7 +726,7 @@ heatmap_function_other = function(option_list)
       
       
       annotation_file_long_sel_identity_sel$other<-factor(annotation_file_long_sel_identity_sel$other,
-                                                               levels=c(selected_annotations_other),
+                                                               levels=unique(annotation_file_long_sel_identity_sel$other),
                                                                ordered = T)
       
       annotation_file_long_sel_identity_sel<-annotation_file_long_sel_identity_sel[order(annotation_file_long_sel_identity_sel$other),]
@@ -731,7 +739,16 @@ heatmap_function_other = function(option_list)
       
       annotation_file_long_sel_identity_sel.dt<-data.table(annotation_file_long_sel_identity_sel, key='gene')
       
-      annotation_file_sel_collapsed<-as.data.frame(annotation_file_long_sel_identity_sel.dt[,.(other_string=paste(other, collapse='|')), by=key(annotation_file_long_sel_identity_sel.dt)], stringsAsFactors=F)
+      annotation_file_sel_collapsed<-as.data.frame(annotation_file_long_sel_identity_sel.dt[,.(other_string=paste(other, collapse="\n")), by=key(annotation_file_long_sel_identity_sel.dt)], stringsAsFactors=F)
+      
+      vector_of_other_string<-unique(annotation_file_sel_collapsed$other_string)
+      
+      rordered_unique_levels<-c(vector_of_other_string[which(vector_of_other_string%in%unique(annotation_file_long_sel_identity_sel$other))],
+                                vector_of_other_string[-which(vector_of_other_string%in%unique(annotation_file_long_sel_identity_sel$other))])
+      
+      annotation_file_sel_collapsed$other_string<-factor(annotation_file_sel_collapsed$other_string,
+                                                      levels=rordered_unique_levels,
+                                                      ordered=T)
       
       
       if(DEBUG == 1){
@@ -896,7 +913,8 @@ heatmap_function_other = function(option_list)
                                 brewer.pal(8, "Dark2")[c(4)],
                                 brewer.pal(8, "Dark2")[c(5)],
                                 brewer.pal(8, "Dark2")[c(6)],
-                                brewer.pal(8, "Dark2")[c(7)])
+                                brewer.pal(8, "Dark2")[c(7)],
+                                brewer.pal(8, "Dark2")[c(8)])
       
       
       names(vector_colors_identity)<-levels(annotation_col$identity)

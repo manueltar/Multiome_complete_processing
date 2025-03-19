@@ -372,7 +372,7 @@ GSEA_function = function(option_list)
     
     identity_sel<-array_identities[i]
     
-    cat("-------------------------------------------------------------------------------------------------->\t")
+    cat("----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------->\t")
     cat(sprintf(as.character(identity_sel)))
     cat("\n")
     
@@ -518,9 +518,9 @@ GSEA_function = function(option_list)
 
             
             minGSSize_spec<-1
-            maxGSSize_spec<-500
+            maxGSSize_spec<-600
             
-            DEBUG<-1
+            DEBUG<-0
             
             if(DEBUG ==1){
               
@@ -723,10 +723,9 @@ GSEA_function = function(option_list)
       GSEA_df<-rbind(identity_df,GSEA_df)
       
 
-      Leading_edge_list[[i]]<-contrast_list
+      Leading_edge_list[[identity_sel]]<-contrast_list
       
-      names(Leading_edge_list)[i]<-identity_sel
-      
+
       
       
     }#dim(identity_df)[1] >0
@@ -865,7 +864,7 @@ Leading_edge_printer = function(option_list)
   cat(str(array_identities))
   cat("\n")
   
-  DEBUG<-0
+  DEBUG<-1
   
 
   
@@ -1005,7 +1004,26 @@ Leading_edge_printer = function(option_list)
           
           setwd(Leading_edge_plots_dir)
           
-          svgname<-paste(array_gene_sets_sel,'.svg', sep='')
+          
+          filename<-gsub("\\s+","_",array_gene_sets_sel)
+          
+          
+          FLAG_nchar<-nchar(filename)
+          
+          if(FLAG_nchar >= 15){
+            
+            
+            svgname<-paste(paste(unlist(strsplit(filename, split=''))[c(1:15)],collapse=''),'.svg', sep='')
+            
+            
+            
+          }else{
+            
+            svgname<-paste(filename,'.svg', sep='')
+            
+            
+          }#FLAG_nchar >= 15
+          
           
           
           makesvg = TRUE

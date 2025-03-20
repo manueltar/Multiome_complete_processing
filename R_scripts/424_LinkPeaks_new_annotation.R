@@ -80,18 +80,18 @@ data_wrangling = function(option_list)
   # cat(str(adata))
   # cat("\n")
  
-  # Set ATAC_by_refined_annotation as assay ----------------------
+  # Set rpca_annot_majority_vote as assay ----------------------
  
-  DefaultAssay(adata)<-'ATAC_by_refined_annotation'
+  DefaultAssay(adata)<-'rpca_annot_majority_vote'
   
   # Do RegionStats ----------------------
   
-  adata <- RegionStats(adata, genome = BSgenome.Hsapiens.UCSC.hg38, assay='ATAC_by_refined_annotation')
+  adata <- RegionStats(adata, genome = BSgenome.Hsapiens.UCSC.hg38, assay='rpca_annot_majority_vote')
   
   
   adata <- LinkPeaks(
     object = adata,
-    peak.assay = "ATAC_by_refined_annotation",
+    peak.assay = "rpca_annot_majority_vote",
     expression.assay = "SCT",
     genes.use = SIG_genes)
   

@@ -79,7 +79,7 @@ MACS2_call_peaks = function(option_list)
   DefaultAssay(adata) <- 'ATAC'
   peaks <- CallPeaks(
     object = adata,
-    group.by = "refined_annotation_majority_vote",    
+    group.by = "rpca_annot_majority_vote",    
     macs2.path = "/group/soranzo/conda_envs/Manuel_macs2/bin/macs2")
   
   frag_file<-opt$frag_file
@@ -106,14 +106,14 @@ MACS2_call_peaks = function(option_list)
   
   
   
-  adata[['ATAC_by_refined_annotation']] <- chrom_assay
+  adata[['ATAC_by_rpca_refined_annotation']] <- chrom_assay
   
   #### Save third clustered filtered object  ------------------
   
   
   setwd(out)
   
-  saveRDS(adata,file="merged_clusters_after_genotyping_after_refined_annotation_new_peaks.rds")
+  saveRDS(adata,file="merged_clusters_after_genotyping_after_refined_annotation_rpca_new_peaks.rds")
   
   
   

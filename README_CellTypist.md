@@ -12,3 +12,9 @@ Jupyter notebook: 20250122_Alsinet_CellTypist.ipynb
 
 Jupyter notebook: 20250121_predict_cell_identity.ipynb
 Jupyter notebook: 20250125_majority_voting.ipynb
+
+# After CellTypist is used see the jupyter notebooks:
+
+-Jupyter_notebooks/graphs_for_presentation.ipynb
+-Jupyter_notebooks/explore_subclustering.ipynb
+-Jupyter_notebooks/RPCA_explore.ipynb

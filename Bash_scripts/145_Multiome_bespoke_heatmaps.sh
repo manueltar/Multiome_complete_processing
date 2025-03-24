@@ -9,9 +9,8 @@ MASTER_ROUTE=$1
 analysis=$2
 annotation_file=$3
 selected_annotations=$(echo "Dorothea_ABCD_GATA6_targets,Dorothea_ABCD_BCL11A_targets")
-#selected_annotations_other=$(echo "CONCANNON_APOPTOSIS_BY_EPOXOMICIN_UP,G2M,HP_INCREASED_MEAN_PLATELET_VOLUME,HP_ABNORMAL_PLATELET_VOLUME")
-selected_annotations_other=$(echo "ZHENG_CORD_BLOOD_C1_PUTATIVE_MEGAKARYOCYTE_PROGENITOR")
-
+selected_annotations_other=$(echo "DESCARTES_MAIN_FETAL_MEGAKARYOCYTES,HP_INCREASED_MEAN_PLATELET_VOLUME")
+#selected_annotations_other=$(echo "cycle,G2M,In-house,FIBROSIS")
 
 output_dir=$(echo "$MASTER_ROUTE""$analysis""/")
 

@@ -916,140 +916,148 @@ Leading_edge_printer = function(option_list)
       
     }#FLAG_NA >0
     
-    for(k in 1:length(indexes_contrasts_NO_NA)){
+    
+    FLAG_EMPTY<-length(which(indexes_contrasts == ""))
+    
+    if(FLAG_EMPTY >0){
       
-      indexes_contrasts_NO_NA_sel<-indexes_contrasts_NO_NA[k]
-      contrasts_sel<-array_contrasts[as.numeric(indexes_contrasts_NO_NA_sel)]
+      indexes_contrasts_NO_NA_NO_EMPTY<-indexes_contrasts_NO_NA[which(indexes_contrasts_NO_NA != "")]
       
+    }else{
       
-      cat("----------------->\t")
-      cat(sprintf(as.character(indexes_contrasts_NO_NA_sel)))
-      cat("\t")
-      cat(sprintf(as.character(contrasts_sel)))
-      cat("\n")
-      
+      indexes_contrasts_NO_NA_NO_EMPTY<-indexes_contrasts_NO_NA
       
       
-      path_contrast_sel<-paste(path_identity_sel,contrasts_sel,'/',sep='')
-      
-      if (file.exists(path_contrast_sel)){
+    }#FLAG_EMPTY >0
+    
+    if(length(indexes_contrasts_NO_NA_NO_EMPTY) >0){
+      for(k in 1:length(indexes_contrasts_NO_NA_NO_EMPTY)){
+        
+        indexes_contrasts_NO_NA_NO_EMPTY_sel<-indexes_contrasts_NO_NA_NO_EMPTY[k]
+        contrasts_sel<-array_contrasts[as.numeric(indexes_contrasts_NO_NA_NO_EMPTY_sel)]
         
         
-        
-      }else{
-        
-        dir.create(path_contrast_sel)
-      }
-      
-      Leading_edge_plots_dir<-paste0(path_contrast_sel,'GSEA_Leading_edge_plots','/')
-      
-      if(file.exists(Leading_edge_plots_dir)){
-        
-        unlink(Leading_edge_plots_dir, recursive =T)
-        
-        dir.create(Leading_edge_plots_dir)
-      }else{
-        
-        dir.create(Leading_edge_plots_dir)
-      }
-      
-      
-      cat("Leading_edge_plots_dir_0\n")
-      cat(sprintf(as.character(Leading_edge_plots_dir)))
-      cat("\n")
-      
-      
-      List_GSEA_identity_sel_contrast_sel<-List_GSEA_identity_sel[[indexes_contrasts_NO_NA_sel]]
-      
-      
-      
-      array_collections<-names(List_GSEA_identity_sel_contrast_sel)
-      
-      cat("array_collections_0\n")
-      str(array_collections)
-      cat("\n")
-      
-      for(h in 1:length(array_collections)){
-        
-        array_collections_sel<-array_collections[h]
-        
-        
-        cat("--->\t")
-        cat(sprintf(as.character(array_collections_sel)))
+        cat("----------------->\t")
+        cat(sprintf(as.character(indexes_contrasts_NO_NA_NO_EMPTY_sel)))
+        cat("\t")
+        cat(sprintf(as.character(contrasts_sel)))
         cat("\n")
         
-        List_GSEA_identity_sel_contrast_sel_collection_sel<-List_GSEA_identity_sel_contrast_sel[[array_collections_sel]]
         
-        array_gene_sets<-List_GSEA_identity_sel_contrast_sel_collection_sel$Description
         
-        cat("array_gene_sets_0\n")
-        str(array_gene_sets)
+        path_contrast_sel<-paste(path_identity_sel,contrasts_sel,'/',sep='')
+        
+        if (file.exists(path_contrast_sel)){
+          
+          
+          
+        }else{
+          
+          dir.create(path_contrast_sel)
+        }
+        
+        Leading_edge_plots_dir<-paste0(path_contrast_sel,'GSEA_Leading_edge_plots','/')
+        
+        if(file.exists(Leading_edge_plots_dir)){
+          
+          unlink(Leading_edge_plots_dir, recursive =T)
+          
+          dir.create(Leading_edge_plots_dir)
+        }else{
+          
+          dir.create(Leading_edge_plots_dir)
+        }
+        
+        
+        cat("Leading_edge_plots_dir_0\n")
+        cat(sprintf(as.character(Leading_edge_plots_dir)))
         cat("\n")
         
-        for(l in 1:length(array_gene_sets)){
+        
+        List_GSEA_identity_sel_contrast_sel<-List_GSEA_identity_sel[[indexes_contrasts_NO_NA_NO_EMPTY_sel]]
+        
+        
+        
+        array_collections<-names(List_GSEA_identity_sel_contrast_sel)
+        
+        cat("array_collections_0\n")
+        str(array_collections)
+        cat("\n")
+        
+        for(h in 1:length(array_collections)){
           
-          array_gene_sets_sel<-array_gene_sets[l]
+          array_collections_sel<-array_collections[h]
           
           
-          cat(">\t")
-          cat(sprintf(as.character(array_gene_sets_sel)))
+          cat("--->\t")
+          cat(sprintf(as.character(array_collections_sel)))
           cat("\n")
           
+          List_GSEA_identity_sel_contrast_sel_collection_sel<-List_GSEA_identity_sel_contrast_sel[[array_collections_sel]]
           
+          array_gene_sets<-List_GSEA_identity_sel_contrast_sel_collection_sel$Description
           
+          cat("array_gene_sets_0\n")
+          str(array_gene_sets)
+          cat("\n")
           
-          Leading_edge_plot<-gseaplot(List_GSEA_identity_sel_contrast_sel_collection_sel, geneSetID = l, title = List_GSEA_identity_sel_contrast_sel_collection_sel@result$Description[l])
-          
-          
-          
-          setwd(Leading_edge_plots_dir)
-          
-          
-          filename<-gsub("\\s+","_",array_gene_sets_sel)
-          
-          
-          FLAG_nchar<-nchar(filename)
-          
-          if(FLAG_nchar >= 15){
+          for(l in 1:length(array_gene_sets)){
+            
+            array_gene_sets_sel<-array_gene_sets[l]
             
             
-            svgname<-paste(paste(unlist(strsplit(filename, split=''))[c(1:15)],collapse=''),'.svg', sep='')
+            cat(">\t")
+            cat(sprintf(as.character(array_gene_sets_sel)))
+            cat("\n")
             
             
             
-          }else{
             
-            svgname<-paste(filename,'.svg', sep='')
+            Leading_edge_plot<-gseaplot(List_GSEA_identity_sel_contrast_sel_collection_sel, geneSetID = l, title = List_GSEA_identity_sel_contrast_sel_collection_sel@result$Description[l])
             
             
-          }#FLAG_nchar >= 15
-          
-          
-          
-          makesvg = TRUE
-          
-          if (makesvg == TRUE)
-          {
-            ggsave(svgname, plot= Leading_edge_plot,
-                   device="svg")
-          }
-          
-          
-          
-          
-        }#l in 1:length(array_gene_sets
-      }# h in 1:length(array_collections)
+            
+            setwd(Leading_edge_plots_dir)
+            
+            
+            filename<-gsub("\\s+","_",array_gene_sets_sel)
+            
+            
+            FLAG_nchar<-nchar(filename)
+            
+            if(FLAG_nchar >= 30){
+              
+              
+              svgname<-paste(paste(unlist(strsplit(filename, split=''))[c(1:30)],collapse=''),'.svg', sep='')
+              
+              
+              
+            }else{
+              
+              svgname<-paste(filename,'.svg', sep='')
+              
+              
+            }#FLAG_nchar >= 30
+            
+            
+            
+            makesvg = TRUE
+            
+            if (makesvg == TRUE)
+            {
+              ggsave(svgname, plot= Leading_edge_plot,
+                     device="svg")
+            }
+            
+            
+            
+            
+          }#l in 1:length(array_gene_sets
+        }# h in 1:length(array_collections)
+        
+      }# k in 1:length(indexes_contrasts_NO_NA_NO_EMPTY)
       
-    }# k in 1:length(indexes_contrasts_NO_NA)
-    
-    
-    
-    
-    
-    
-    
-   
-    
+    }#length(indexes_contrasts_NO_NA_NO_EMPTY) >0
   }# i in 1:length(array_identities)
   
 }
@@ -1329,7 +1337,7 @@ Lolliplot_and_gene_annotation = function(option_list)
       Gene_set_lolliplot <-Gene_set_lolliplot+
         theme_cowplot(font_size = 2,
                       font_family = "sans")+
-        facet_grid(. ~ contrast+identity, scales='free_x', space='free_x', switch="y", drop=TRUE)+
+        facet_grid(. ~ identity + contrast, scales='free_x', space='free_x', switch="y", drop=TRUE)+
         theme( strip.background = element_blank(),
                strip.placement = "outside",
                strip.text = element_text(size=5,color="black", family="sans"),
@@ -1373,6 +1381,300 @@ Lolliplot_and_gene_annotation = function(option_list)
  
 }
 
+Lolliplot_and_gene_annotation_subset = function(option_list)
+{
+  
+  opt_in = option_list
+  opt <<- option_list
+  
+  cat("All options:\n")
+  printList(opt)
+  
+  
+  #### READ and transform type ----
+  
+  type = opt$type
+  
+  cat("TYPE_\n")
+  cat(sprintf(as.character(type)))
+  cat("\n")
+  
+  
+  #### READ and transform out ----
+  
+  out = opt$out
+  
+  cat("OUT_\n")
+  cat(sprintf(as.character(out)))
+  cat("\n")
+  
+  #### READ and transform Threshold_number_of_genes ----
+  
+  Threshold_number_of_genes = opt$Threshold_number_of_genes
+  
+  cat("Threshold_number_of_genes_\n")
+  cat(sprintf(as.character(Threshold_number_of_genes)))
+  cat("\n")
+  
+  
+  
+  GSEA_result<-readRDS(file=opt$GSEA_result)
+  
+  cat("GSEA_result_0\n")
+  str(GSEA_result)
+  cat("\n")
+  
+  array_identities<-levels(GSEA_result$identity)
+  
+  
+  cat("array_identities_0\n")
+  cat(str(array_identities))
+  cat("\n")
+  
+  array_contrasts<-levels(GSEA_result$contrast)
+  
+  
+  cat("array_contrasts_0\n")
+  cat(str(array_contrasts))
+  cat("\n")
+  
+  GSEA_result$contrast<-factor(GSEA_result$contrast,
+                               levels = rev(array_contrasts),
+                               ordered = TRUE)
+  
+  
+  cat("GSEA_result_1\n")
+  str(GSEA_result)
+  cat("\n")
+  
+  # Maximize pvalue by ID, identity, contrast -----------------------------------
+  
+  
+  GSEA_result.dt<-data.table(GSEA_result, key=c("ID","identity","contrast"))
+  
+  GSEA_result_MAX<-as.data.frame(GSEA_result.dt[,.SD[which.max(minuslog10padj)],by=key(GSEA_result.dt)], stringsAsFactors=F)
+  
+  cat("GSEA_result_MAX_0\n")
+  str(GSEA_result_MAX)
+  cat("\n")
+  
+  
+  
+  ############### Read TF terms -------------------------
+  
+  TF_terms<-unique(unlist(strsplit(opt$TF_terms, split=',')))
+  
+  cat("TF_terms_0\n")
+  str(TF_terms)
+  cat("\n")
+  
+  TF_terms_to_match<-paste(TF_terms, collapse="|")
+  
+  cat("TF_terms_to_match_0\n")
+  str(TF_terms_to_match)
+  cat("\n")
+  
+  
+  ## Classify pathways ------------------------------------
+  
+  GSEA_result_MAX$PATH_class<-NA
+  
+  GSEA_result_MAX$PATH_class[grep(TF_terms_to_match,GSEA_result_MAX$ID)]<-'TF_targets'
+  
+  GSEA_result_MAX$PATH_class[-grep(TF_terms_to_match,GSEA_result_MAX$ID)]<-'other'
+  
+  GSEA_result_MAX$PATH_class<-factor(GSEA_result_MAX$PATH_class, levels=c('TF_targets','other'), ordered=T)
+  
+  
+  cat("GSEA_result_MAX_1\n")
+  str(GSEA_result_MAX)
+  cat("\n")
+  
+  ## Annotate genes in pathways ------------------------------------------
+  
+  ind.dep<-which(colnames(GSEA_result_MAX)%in%c('core_enrichment'))
+  
+  
+  GSEA_result_MAX.dt<-data.table(GSEA_result_MAX, key=colnames(GSEA_result_MAX)[-ind.dep])
+  
+  
+  
+  GSEA_result_MAX_with_count<-as.data.frame(GSEA_result_MAX.dt[,.(core_enrichment = core_enrichment,
+                                                                  Count=length(unlist(strsplit(core_enrichment, split='/')))), by=key(GSEA_result_MAX.dt)], stringAsFactors=F)
+  
+  
+  cat("GSEA_result_MAX_with_count_0\n")
+  str(GSEA_result_MAX_with_count)
+  cat("\n")
+  
+  
+  
+ 
+  
+  ### Lolliplot -----------------------
+  
+  GSEA_result_MAX_with_count$PATH_class<-factor(as.character(GSEA_result_MAX_with_count$PATH_class), levels=rev(c('TF_targets','other')), ordered=T)
+  
+  
+  cat("GSEA_result_MAX_with_count_REMEMBER\n")
+  str(GSEA_result_MAX_with_count)
+  cat("\n")
+  
+  
+  
+  
+  
+  GSEA_result_MAX_with_count_Thresholded<-GSEA_result_MAX_with_count[which(GSEA_result_MAX_with_count$Count >= Threshold_number_of_genes),]
+  
+  
+  cat("GSEA_result_MAX_with_count_Thresholded_REMEMBER\n")
+  str(GSEA_result_MAX_with_count_Thresholded)
+  cat("\n")
+  
+  ID_selected<-paste(c('DESCARTES_MAIN_FETAL_MEGAKARYOCYTES','Cell cycle','G2M','HP_INCREASED_MEAN_PLATELET_VOLUME'), collapse="|")
+  
+  cat("ID_selected_0\n")
+  str(ID_selected)
+  cat("\n")
+  
+  
+  GSEA_result_MAX_with_count_Thresholded_subset<-GSEA_result_MAX_with_count_Thresholded[grep(ID_selected, GSEA_result_MAX_with_count_Thresholded$ID),]
+  
+  cat("GSEA_result_MAX_with_count_Thresholded_subset_0\n")
+  str(GSEA_result_MAX_with_count_Thresholded_subset)
+  cat("\n")
+  
+  #### LOOP of identities  -----
+  
+  
+  DEBUG<-0
+  
+  
+  for(i in 1:length(array_identities)){
+    
+    identity_sel<-array_identities[i]
+    
+    cat("-------------------------------------------------------------------------------------------------->\t")
+    cat(sprintf(as.character(identity_sel)))
+    cat("\n")
+    
+    path_identity_sel<-paste(out,identity_sel,'/',sep='')
+    
+    if (file.exists(path_identity_sel)){
+      
+      
+      
+    }else{
+      
+      dir.create(path_identity_sel)
+    }
+    
+    
+    GSEA_result_MAX_with_count_Thresholded_subset_sel<-GSEA_result_MAX_with_count_Thresholded_subset[which(GSEA_result_MAX_with_count_Thresholded_subset$identity == identity_sel),]
+    
+    if(DEBUG == 1){
+      
+      cat("GSEA_result_MAX_with_count_Thresholded_subset_sel_0\n")
+      cat(str(GSEA_result_MAX_with_count_Thresholded_subset_sel))
+      cat("\n")
+    }
+    
+    if(dim(GSEA_result_MAX_with_count_Thresholded_subset_sel)[1] >0){
+      
+      GSEA_result_MAX_with_count_Thresholded_subset_sel<-GSEA_result_MAX_with_count_Thresholded_subset_sel[order(GSEA_result_MAX_with_count_Thresholded_subset_sel$PATH_class),]
+      
+      levels_ID<-unique(as.character(GSEA_result_MAX_with_count_Thresholded_subset_sel$ID))
+      
+      GSEA_result_MAX_with_count_Thresholded_subset_sel$DUMMY<-factor(GSEA_result_MAX_with_count_Thresholded_subset_sel$ID, levels=levels_ID, ordered=T)
+      
+      if(DEBUG ==1){
+        
+        cat("GSEA_result_MAX_with_count_Thresholded_subset_sel_0\n")
+        str(GSEA_result_MAX_with_count_Thresholded_subset_sel)
+        cat("\n")
+      }
+      
+      
+      breaks_gene_sets<-as.numeric(GSEA_result_MAX_with_count_Thresholded_subset_sel$DUMMY)
+      labels_gene_sets<-as.character(gsub("\\..+$","",GSEA_result_MAX_with_count_Thresholded_subset_sel$DUMMY))
+      
+      
+      Gene_set_lolliplot<-ggplot(data=GSEA_result_MAX_with_count_Thresholded_subset_sel, 
+                                 aes(y=as.numeric(DUMMY),
+                                     x=minuslog10padj)) +
+        geom_segment(data=GSEA_result_MAX_with_count_Thresholded_subset_sel[which(GSEA_result_MAX_with_count_Thresholded_subset_sel$minuslog10padj > 0), ],
+                     aes(y=as.numeric(DUMMY),
+                         yend=as.numeric(DUMMY),
+                         x=0,
+                         xend=minuslog10padj,
+                         color=NES),
+                     size=0.8)+
+        geom_point(data=GSEA_result_MAX_with_count_Thresholded_subset_sel[which(GSEA_result_MAX_with_count_Thresholded_subset_sel$minuslog10padj > 0), ],
+                   aes(color=NES),size=5, stroke=1, shape=21,fill="white")+
+        geom_text(data=GSEA_result_MAX_with_count_Thresholded_subset_sel[which(GSEA_result_MAX_with_count_Thresholded_subset_sel$minuslog10padj > 0), ],
+                  aes(x=minuslog10padj, y=as.numeric(DUMMY), label=Count),color="black",size=2, family="sans",fontface="bold")+
+        geom_segment(data=GSEA_result_MAX_with_count_Thresholded_subset_sel[which(GSEA_result_MAX_with_count_Thresholded_subset_sel$minuslog10padj < 0), ],
+                     aes(y=as.numeric(DUMMY),
+                         yend=as.numeric(DUMMY),
+                         x=0,
+                         xend=minuslog10padj,
+                         color=NES),
+                     size=0.8)+
+        geom_point(data=GSEA_result_MAX_with_count_Thresholded_subset_sel[which(GSEA_result_MAX_with_count_Thresholded_subset_sel$minuslog10padj < 0), ],
+                   aes(color=NES), stroke=1, shape=21, fill="white")+
+        geom_text(data=GSEA_result_MAX_with_count_Thresholded_subset_sel[which(GSEA_result_MAX_with_count_Thresholded_subset_sel$minuslog10padj < 0), ],
+                  aes(x=minuslog10padj, y=as.numeric(DUMMY), label=Count),color="black",size=2, family="sans",fontface="bold")+
+        scale_color_gradient2(name=paste("Normalized","Enrichment","Score", sep="\n"),
+                              low = "blue", high = "red",mid="white",midpoint=0,
+                              na.value = NA)
+      
+      
+      Gene_set_lolliplot <-Gene_set_lolliplot+
+        theme_cowplot(font_size = 2,
+                      font_family = "sans")+
+        facet_grid(contrast ~ identity , scales='free_x', space='free_x', switch="y", drop=TRUE)+
+        theme( strip.background = element_blank(),
+               strip.placement = "outside",
+               strip.text = element_text(size=5,color="black", family="sans"),
+               panel.spacing = unit(0.2, "lines"),
+               panel.background=element_rect(fill="white"),
+               panel.border=element_rect(colour="white",size=0,5),
+               panel.grid.major = element_blank(),
+               panel.grid.minor = element_blank())+
+        scale_x_continuous(name='-log10pval')+
+        scale_y_continuous(name=NULL, breaks=breaks_gene_sets,
+                           labels=labels_gene_sets)+
+        theme_classic()+
+        theme(axis.title=element_blank(),
+              axis.title.y=element_blank(),
+              axis.title.x=element_text(size=12,color="black", family="sans"),
+              axis.text.y=element_text(size=10,color="black", family="sans", face='bold'),
+              axis.text.x=element_text(size=10,color="black", family="sans"))+
+        theme(legend.title = element_text(size=12),
+              legend.text = element_text(size=10),
+              legend.key.size = unit(0.5, 'cm'), #change legend key size
+              legend.key.height = unit(0.5, 'cm'), #change legend key height
+              legend.key.width = unit(0.5, 'cm'), #change legend key width
+              legend.position="right")
+      
+      
+      setwd(path_identity_sel)
+      
+      svgname<-paste(paste("Lolliplot",'GSEA','selected',sep='_'),".svg",sep='')
+      makesvg = TRUE
+      
+      if (makesvg == TRUE)
+      {
+        ggsave(svgname, plot= Gene_set_lolliplot,
+               device="svg")
+      }
+      
+      
+    }# dim(GSEA_result_MAX_with_count_Thresholded_subset_sel)[1] >0
+    
+  }#i in 1:length(array_identities)
+  
+}
 
 printList = function(l, prefix = "    ") {
   list.df = data.frame(val_name = names(l), value = as.character(l))
@@ -1437,6 +1739,7 @@ main = function() {
   GSEA_function(opt)
   Leading_edge_printer(opt)
   Lolliplot_and_gene_annotation(opt)
+  Lolliplot_and_gene_annotation_subset(opt)
   
   
   

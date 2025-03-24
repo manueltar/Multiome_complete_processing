@@ -15,8 +15,8 @@ output_dir=$(echo "$MASTER_ROUTE""$analysis""/")
 
 Log_files=$(echo "$output_dir""/""Log_files/")
 
-# rm -rf $Log_files
-# mkdir -p $Log_files
+rm -rf $Log_files
+mkdir -p $Log_files
 
 conda activate multiome_NEW_downstream_analysis
 
@@ -81,7 +81,7 @@ conda deactivate
 
 conda activate GSEA
 
-### MSigDB_GSEA
+## MSigDB_GSEA
 
 type=$(echo "$analysis""_""MSigDB_GSEA")
 outfile_MSigDB_GSEA=$(echo "$Log_files""outfile_4_""$type"".out")
@@ -103,6 +103,7 @@ GSEA_result=$(echo "$output_dir""GSEA_results_significant.rds")
 
 myjobid_MSigDB_GSEA=$(sbatch --dependency=afterany:$myjobid_DE_function --job-name=$name_MSigDB_GSEA --output=$outfile_MSigDB_GSEA --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=2 --mem-per-cpu=1024 --parsable --wrap="Rscript $Rscript_MSigDB_GSEA --DE_results $DE_results --path_to_GMT $path_to_GMT --search_terms $search_terms --pval_threshold $pval_threshold --log2FC_threshold $log2FC_threshold --Threshold_number_of_genes $Threshold_number_of_genes --TF_terms $TF_terms --List_GSEA $List_GSEA --GSEA_result $GSEA_result --type $type --out $output_dir")
 myjobid_seff_MSigDB_GSEA=$(sbatch --dependency=afterany:$myjobid_MSigDB_GSEA --open-mode=append --output=$outfile_MSigDB_ORA --job-name=$seff_name --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=1 --mem-per-cpu=128M --parsable --wrap="seff $myjobid_MSigDB_GSEA >> $outfile_MSigDB_GSEA")
+
 
 ### MSigDB_ORA
 
@@ -129,3 +130,4 @@ myjobid_MSigDB_ORA=$(sbatch  --dependency=afterany:$myjobid_DE_function --job-na
 myjobid_seff_MSigDB_ORA=$(sbatch --dependency=afterany:$myjobid_MSigDB_ORA --open-mode=append --output=$outfile_MSigDB_ORA --job-name=$seff_name --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=1 --mem-per-cpu=128M --parsable --wrap="seff $myjobid_MSigDB_ORA >> $outfile_MSigDB_ORA")
 
 
+conda deactivate

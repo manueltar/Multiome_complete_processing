@@ -367,8 +367,11 @@ GSEA_function = function(option_list)
   GSEA_df<-data.frame()
   Leading_edge_list<-list()
   
+  START<-which(array_identities == 'early_MK')
+  START<-1
   
-  for(i in 1:length(array_identities)){
+  
+  for(i in START:length(array_identities)){
     
     identity_sel<-array_identities[i]
     
@@ -397,17 +400,20 @@ GSEA_function = function(option_list)
     DE_result_sel$ENTREZID <- mapIds(org.Hs.eg.db, keys=DE_result_sel$gene, keytype="SYMBOL",
                                      column="ENTREZID", multiVals=multiVals)
     
-    
+    if(DEBUG == 1){
     cat("DE_result_sel_2\n")
     str(DE_result_sel)
     cat("\n")
+    }
     
     
     DE_result_sel_with_ENTREZ<-DE_result_sel[-which(DE_result_sel$ENTREZID == "NA"),]
     
+    if(DEBUG == 1){
     cat("DE_result_sel_with_ENTREZ_0\n")
     str(DE_result_sel_with_ENTREZ)
     cat("\n")
+    }
     
     
     # LOOP per contrast and cell type -----------------------------------------------------------------
@@ -415,21 +421,24 @@ GSEA_function = function(option_list)
     
     array_contrasts<-unique(DE_result_sel_with_ENTREZ$contrast)
     
+    if(DEBUG == 1){
     cat("array_contrasts\n")
     str(array_contrasts)
     cat("\n")
+    }
     
     
     
     
-    DEBUG<-0
+    
     
     bg_files <- list.files(path = out_path, pattern = '_selected.rds$', full.names = TRUE)
     
+    if(DEBUG == 1){
     cat("bg_files_0\n")
     str(bg_files)
     cat("\n")
-    
+    }
    
     
     contrast_list<-list()
@@ -491,7 +500,7 @@ GSEA_function = function(option_list)
           if(DEBUG ==1){
             
             cat("selected_collection_df_0\n")
-            # str(selected_collection_df)
+            str(selected_collection_df)
             cat("\n")
           }
           
@@ -508,8 +517,7 @@ GSEA_function = function(option_list)
             
             minGSSize_spec<-10
             maxGSSize_spec<-500
-            DEBUG<-0
-            
+
             
           }else{
             
@@ -520,8 +528,7 @@ GSEA_function = function(option_list)
             minGSSize_spec<-1
             maxGSSize_spec<-600
             
-            DEBUG<-0
-            
+
             if(DEBUG ==1){
               
               cat("selected_collection_df_0\n")
@@ -548,118 +555,124 @@ GSEA_function = function(option_list)
               cat("\n")
             }
             
-            
-            
-            res = GSEA(geneList, 
-                       TERM2GENE=selected_collection_df,                            
-                       maxGSSize=maxGSSize_spec,
-                       minGSSize=minGSSize_spec,
-                       pvalueCutoff = 0.05,
-                       pAdjustMethod = "BH")
-            
-            
-            
-            
-            if(DEBUG ==1){
+            FLAG_overlap<-length(which(names(geneList)%in%selected_collection_df$gene))
+            # 
+            # if(DEBUG ==1){
               
-              cat("res_0\n")
-              # str(res)
+              cat("FLAG_overlap_0\n")
+              str(FLAG_overlap)
               cat("\n")
-            }
+            # }
             
             
-            res_df <- res@result
-            
-            if(dim(res_df)[1] >0){
+            if(FLAG_overlap > 0){
+              
+              res = GSEA(geneList, 
+                         TERM2GENE=selected_collection_df,                            
+                         maxGSSize=maxGSSize_spec,
+                         minGSSize=minGSSize_spec,
+                         pvalueCutoff = 0.05,
+                         pAdjustMethod = "BH")
+              
+              
+              
               
               if(DEBUG ==1){
                 
-                cat("res_df_0\n")
-                str(res_df)
-                cat("\n")
-              }
-              
-              res_df <- res_df %>% mutate(minuslog10padj = -log10(p.adjust))
-              
-              if(DEBUG ==1){
-                
-                cat("res_df_3\n")
-                str(res_df)
+                cat("res_0\n")
+                # str(res)
                 cat("\n")
               }
               
               
-              FLAG_ZERO<-length(which(unique(res_df$core_enrichment) == ""))
+              res_df <- res@result
               
-              
-              cat("FLAG_ZERO_0\n")
-              str(FLAG_ZERO)
-              cat("\n")
-              
-              
-              if(FLAG_ZERO == 0){
-                
-                res_df_long<-unique(as.data.frame(cSplit(res_df,sep = '/', direction = "long",
-                                                         splitCols = "core_enrichment"),stringsAsFactors=F))
-                
-                res_df_long$core_enrichment<-as.character(res_df_long$core_enrichment)
+              if(dim(res_df)[1] >0){
                 
                 if(DEBUG ==1){
-                  str(res_df_long)
+                  
+                  cat("res_df_0\n")
+                  str(res_df)
                   cat("\n")
                 }
                 
-                res_df_long$core_enrichment <- mapIds(org.Hs.eg.db, keys=res_df_long$core_enrichment, keytype="ENTREZID",
-                                                      column="SYMBOL", multiVals=multiVals)
+                res_df <- res_df %>% mutate(minuslog10padj = -log10(p.adjust))
                 
                 if(DEBUG ==1){
-                  str(res_df_long)
-                  cat("\n")
-                }
-                
-                res_df_long.dt<-data.table(res_df_long, key=colnames(res_df_long)[-which(colnames(res_df_long) == 'core_enrichment')])
-                
-                
-                res_df_long_collapsed<-as.data.frame(res_df_long.dt[,.(core_enrichment=paste(core_enrichment, collapse='/')), by=key(res_df_long.dt)], stringsAsFactors=F)
-                
-                if(DEBUG ==1){
-                  str(res_df_long_collapsed)
+                  
+                  cat("res_df_3\n")
+                  str(res_df)
                   cat("\n")
                 }
                 
                 
-                
-                contrast_df<-rbind(res_df_long_collapsed, contrast_df)     
-                
-              }else{
-                
-                contrast_df<-rbind(res_df, contrast_df)          
+                FLAG_ZERO<-length(which(unique(res_df$core_enrichment) == ""))
                 
                 
+                cat("FLAG_ZERO_0\n")
+                str(FLAG_ZERO)
+                cat("\n")
                 
-              }# FLAG_ZERO == 0
+                
+                if(FLAG_ZERO == 0){
+                  
+                  res_df_long<-unique(as.data.frame(cSplit(res_df,sep = '/', direction = "long",
+                                                           splitCols = "core_enrichment"),stringsAsFactors=F))
+                  
+                  res_df_long$core_enrichment<-as.character(res_df_long$core_enrichment)
+                  
+                  if(DEBUG ==1){
+                    str(res_df_long)
+                    cat("\n")
+                  }
+                  
+                  res_df_long$core_enrichment <- mapIds(org.Hs.eg.db, keys=res_df_long$core_enrichment, keytype="ENTREZID",
+                                                        column="SYMBOL", multiVals=multiVals)
+                  
+                  if(DEBUG ==1){
+                    str(res_df_long)
+                    cat("\n")
+                  }
+                  
+                  res_df_long.dt<-data.table(res_df_long, key=colnames(res_df_long)[-which(colnames(res_df_long) == 'core_enrichment')])
+                  
+                  
+                  res_df_long_collapsed<-as.data.frame(res_df_long.dt[,.(core_enrichment=paste(core_enrichment, collapse='/')), by=key(res_df_long.dt)], stringsAsFactors=F)
+                  
+                  if(DEBUG ==1){
+                    str(res_df_long_collapsed)
+                    cat("\n")
+                  }
+                  
+                  
+                  
+                  contrast_df<-rbind(res_df_long_collapsed, contrast_df)     
+                  
+                }else{
+                  
+                  contrast_df<-rbind(res_df, contrast_df)          
+                  
+                  
+                  
+                }# FLAG_ZERO == 0
+                
+                ##########
+                
+                
+                
+                List_bg_files[[selected_collection]]<-res
+                
+                names(List_bg_files)<-gsub("\\.entrez_selected\\.rds$","",gsub(paste(out_path,'/',sep=""),"",names(List_bg_files)))
+                
+                
+                
+              }#dim(res_df)[1] >0
               
-              ##########
+            }else{
               
+              # do nothing
               
-              
-              List_bg_files[[selected_collection]]<-res
-              
-              names(List_bg_files)<-gsub("\\.entrez_selected\\.rds$","",gsub(paste(out_path,'/',sep=""),"",names(List_bg_files)))
-              
-              
-              
-            }#dim(res_df)[1] >0
-            
-            
-            
-            
-            
-          
-          
-          
-          
-          
+            }#FLAG_overlap > 0
         }#iteration_bg_files in 1:length(bg_files)
         
         
@@ -864,7 +877,7 @@ Leading_edge_printer = function(option_list)
   cat(str(array_identities))
   cat("\n")
   
-  DEBUG<-1
+  DEBUG<-0
   
 
   

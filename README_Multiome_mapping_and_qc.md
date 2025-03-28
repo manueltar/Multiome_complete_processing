@@ -12,13 +12,8 @@ $ conda env create -f renv_multiome.yml -p /home/manuel.tardaguila/conda_envs/mu
 
 # 1. Map reads of the GEX and ATAC modalities using cellranger-arc count
 
-$ nohup sbatch ~/Scripts/Wraper_scripts/117_2025_hESC_MK_multiome_cellranger_arc_count_v3_MCO_01326.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/ MCO_01326 > MCO_01326.log 2>&1 &
+$ sbatch ~/Scripts/sbatch/5_Cell_ranger_arccount.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/ <sample_id> (e.g. MCO_01330)
 
-$ nohup sbatch ~/Scripts/Wraper_scripts/117_2025_hESC_MK_multiome_cellranger_arc_count_v3_MCO_01326.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/ MCO_01327 > MCO_01327.log 2>&1 &
-
-$ nohup sbatch ~/Scripts/Wraper_scripts/117_2025_hESC_MK_multiome_cellranger_arc_count_v3_MCO_01326.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/ MCO_01328 > MCO_01328.log 2>&1 &
-
-$ nohup sbatch ~/Scripts/Wraper_scripts/117_2025_hESC_MK_multiome_cellranger_arc_count_v3_MCO_01326.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/ MCO_01329 > MCO_01329.log 2>&1 &
 
 # 2. Map unaligned GEX reads to our reference of cell barcodes and count them. Assign barcode to a cell if 1) only one barcode association (no conflicting assignations) and 2) at least three different UMIs support the barcode assignation
 
@@ -26,9 +21,10 @@ $ nohup sbatch ~/Scripts/Wraper_scripts/117_2025_hESC_MK_multiome_cellranger_arc
   
 $ bwa-mem2 index /group/soranzo/manuel.tardaguila/Multiome/RITM0023280/special_reference_files/GFP_transgene_vCHEK2_and_DNMT3A.fa
 
-$ sbatch ~/Scripts/Wraper_scripts/118_Deconvolve_Larry.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/ /group/soranzo/manuel.tardaguila/Multiome/RITM0023280/special_reference_files/GFP_transgene_vCHEK2_and_DNMT3A.fa
+$ sbatch ~/Scripts/sbatch/6_align_to_barcodes_1.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/ /group/soranzo/manuel.tardaguila/Multiome/RITM0023280/special_reference_files/GFP_transgene_vCHEK2_and_DNMT3A.fa <MCO_01330>
 
-$ bash ~/Scripts/Wraper_scripts/119_Filter_Larry_and_graphs.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/deconvolute_LARRY/ count_and_filter
+$ bash ~/Scripts/Wraper_scripts/119_Filter_Larry_and_graphs_v2.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/deconvolute_LARRY/ count_and_filter /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/deconvolute_LARRY/ <MCO_01330>
+
 
 # 3. QC steps. Conda environment multiome_QC (see Dependencies/multiome_QC.yml).
 

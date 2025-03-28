@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=name_Run_cellranger_arc_count_MCO_01326
+#SBATCH --job-name=name_Run_cellranger_arc_count_MCO_01330
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=manuel.tardaguila@fht.org
 #SBATCH --partition=cpuq
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=16
-#SBATCH --output=outfile_Run_cellranger_arc_count_MCO_01326.log
+#SBATCH --output=outfile_Run_cellranger_arc_count_MCO_01330.log
 #SBATCH --mem=52G
 #SBATCH --time=36:00:00
  
@@ -50,4 +50,3 @@ eval "$(conda shell.bash hook)"
 
 
 #### Run_cellranger_arc_count in SLURM (https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/advanced/cluster-mode)
-

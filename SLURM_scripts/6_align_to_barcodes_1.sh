@@ -14,6 +14,8 @@ module load bwa-mem2
 
 output_dir=$1
 special_reference=$2
+samp=$3
+
 
 Larry_deconvolve_dir=$(echo "$output_dir""deconvolute_LARRY")
 
@@ -22,11 +24,6 @@ mkdir -p $Larry_deconvolve_dir
 
 cd $Larry_deconvolve_dir
 
-for samp in MCO_01326 MCO_01327 MCO_01328 MCO_01329;
-
-do
-
-echo Process sample $samp
 
 dir=$(echo "$output_dir""$samp""/""outs")
 
@@ -62,8 +59,8 @@ done
 cat *.$samp.bcs_umi | sort  > $samp.all_geno_bc_umi
 
 
-
-
-done
 echo "========================"
 echo "Completed: $(date)"
+
+
+

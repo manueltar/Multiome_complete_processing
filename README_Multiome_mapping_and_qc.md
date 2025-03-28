@@ -34,10 +34,7 @@ $ bash ~/Scripts/Wraper_scripts/120_Seurat_first_v2.sh /group/soranzo/manuel.tar
 
 ## 3.2 In parallel to 3.1 run CellBender correction of ambient RNA
 
-$ sbatch ~/Scripts/Wraper_scripts/121_Cell_Bender_Paola.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/  MCO_01327
-$ sbatch ~/Scripts/Wraper_scripts/121_Cell_Bender_Paola.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/  MCO_01328
-$ sbatch ~/Scripts/Wraper_scripts/121_Cell_Bender_Paola.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/  MCO_01329
-$ sbatch ~/Scripts/Wraper_scripts/121_Cell_Bender_Paola.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/  MCO_01326
+$ sbatch ~/Scripts/sbatch/7_CellBender.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/ MCO_01330
 
 ## 3.3 In parallel to 3.1 run the python script to convert the per run ATAC peaks into 5kb matrices that can later be merged into a single object. Conda environment Manuel_ATAC (see Dependencies/Manuel_ATAC.yml).
 

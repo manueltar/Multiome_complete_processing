@@ -42,7 +42,7 @@ $ bash ~/Scripts/Wraper_scripts/122_snATAC_pipeline.sh /group/soranzo/manuel.tar
 
 ## 3.4 In parallel to 3.1 merge all the per run peak files to create a global peak reference
 
-$ sbatch ~/Scripts/Wraper_scripts/124_merge_atac_peaks.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/
+$ sbatch ~/Scripts/sbatch/8_merge_atac_peaks.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/
 
 ## 3.5 After 3.1 has finished run Amulet to find doublets in ATAC. Conda environment multiome_QC (see Dependencies/multiome_QC.yml).
 

@@ -44,8 +44,6 @@ input_file=$(echo $MASTER_ROUTE/$samp/outs/raw_feature_bc_matrix.h5)
 
 echo $input_file
 
-# $MASTER_ROUTE/'processing_outputs'/$samp/cellbender_gex.h5
-
 singularity exec --nv --cleanenv -B /localscratch -B /group/soranzo/manuel.tardaguila/ /ssu/gassu/singularity/cellbender_0.3.0.sif cellbender remove-background \
 	    --cuda \
 	    --checkpoint $MASTER_ROUTE/'processing_outputs'/$samp/ckpt.tar.gz \
@@ -61,4 +59,3 @@ conda deactivate
 
 echo "========================"
 echo "Completed: $(date)"
-

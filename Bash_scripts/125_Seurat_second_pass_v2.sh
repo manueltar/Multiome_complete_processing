@@ -29,6 +29,7 @@ do
 	 snATAC_dir=$(echo "/group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/""processing_outputs""/""$sample_array_sel""/""snATAC_matrices""/")
 	 crange_dir=$(echo "/group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/""$sample_array_sel""/""outs""/")
 	 premerge_dir=$(echo "/group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/""processing_outputs""/""$sample_array_sel""/""pre_merge""/")
+	 fragfile=$(echo "/group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/""$sample_array_sel""/""outs""/""atac_fragments.tsv.gz")
 
 	 output_dir=$(echo "/group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/""processing_outputs""/")
 	 Log_files=$(echo "$output_dir""/""Log_files/")
@@ -40,6 +41,7 @@ do
 	 snATAC_dir=$(echo "/group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/""processing_outputs""/""$sample_array_sel""/""snATAC_matrices""/")
 	 crange_dir=$(echo "/group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/""$sample_array_sel""/""outs""/")
 	 premerge_dir=$(echo "/group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/""processing_outputs""/""$sample_array_sel""/""pre_merge""/")
+ 	 fragfile=$(echo "/group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/""$sample_array_sel""/""outs""/""atac_fragments.tsv.gz")
 
 	 output_dir=$(echo "/group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/""processing_outputs""/")
 	 Log_files=$(echo "$output_dir""/""Log_files/")
@@ -52,6 +54,7 @@ do
    echo "$snATAC_dir"
    echo "$crange_dir"
    echo "$premerge_dir"
+   echo "$fragfile"
 
    rm -rf $premerge_dir
    mkdir -p $premerge_dir
@@ -70,7 +73,7 @@ do
     sample_name=$sample_array_sel
  
 
-    myjobid_Seurat_second_pass=$(sbatch --job-name $name_Seurat_second_pass --output=$outfile_Seurat_second_pass --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=15 --mem-per-cpu=8192 --parsable --wrap="Rscript $Rscript_Seurat_second_pass --sample_name $sample_name --preliminary_filtered $preliminary_filtered --path_processing_outputs $path_processing_outputs --intermediate_dir $intermediate_dir --snATAC_dir $snATAC_dir --crange_dir $crange_dir --premerge_dir $premerge_dir  --type $type --out $output_dir")
+    myjobid_Seurat_second_pass=$(sbatch --job-name $name_Seurat_second_pass --output=$outfile_Seurat_second_pass --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=15 --mem-per-cpu=8192 --parsable --wrap="Rscript $Rscript_Seurat_second_pass --sample_name $sample_name --preliminary_filtered $preliminary_filtered --path_processing_outputs $path_processing_outputs --intermediate_dir $intermediate_dir --snATAC_dir $snATAC_dir --crange_dir $crange_dir --premerge_dir $premerge_dir --fragfile $fragfile  --type $type --out $output_dir")
     myjobid_seff_Seurat_second_pass=$(sbatch --dependency=afterany:$myjobid_Seurat_second_pass --open-mode=append --output=$outfile_Seurat_second_pass --job-name="seff" --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=1 --mem-per-cpu=128M --parsable --wrap="seff $myjobid_Seurat_second_pass >> $outfile_Seurat_second_pass")
 
 

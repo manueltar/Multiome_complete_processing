@@ -99,7 +99,11 @@ create_the_premerged_Seurat_object = function(option_list)
   cat(sprintf(as.character(premerge_dir)))
   cat("\n")
   
+  fragfile = opt$fragfile
   
+  cat("fragfile_0\n")
+  cat(sprintf(as.character(fragfile)))
+  cat("\n")
   
   ############### READ 5 kB ATAC windows per sample ------------------------
   
@@ -141,9 +145,9 @@ create_the_premerged_Seurat_object = function(option_list)
   
   adata2[['percent.mt']] <- PercentageFeatureSet(adata2, pattern = '^MT-')
   
-  # cat("adata2_0\n")
+  cat("adata2_0\n")
   # cat(str(adata2))
-  # cat("\n")
+  cat("\n")
   
   #add in previous raw RNA data as another assay (RNA_raw) for comparison
   
@@ -153,9 +157,9 @@ create_the_premerged_Seurat_object = function(option_list)
   adata2[['RNA_raw']] <- raw_rna_assay
   
   
-  # cat("adata2_0\n")
+  cat("adata2_1\n")
   # cat(str(adata2))
-  # cat("\n")
+  cat("\n")
   
   
   
@@ -167,9 +171,18 @@ create_the_premerged_Seurat_object = function(option_list)
   atac_lfmtx$V1 <- factor(atac_lfmtx$V1, levels=colnames(adata2))
   reordered_lfm <- atac_lfmtx[order(atac_lfmtx$V1),]
   
+  cat("atac_lfmtx_1\n")
+  cat(str(atac_lfmtx))
+  cat("\n")
+  
   atac_sm <- with(reordered_lfm,
                   sparseMatrix(i=as.numeric(as.factor(V2)), j=as.numeric(V1),
                                x=V3, dimnames=list(levels(as.factor(V2)), levels(V1))))
+  
+  
+  cat("atac_sm_0\n")
+  cat(str(atac_sm))
+  cat("\n")
   
   
   #create the new chromatin assay object and add to Seurat object
@@ -182,9 +195,12 @@ create_the_premerged_Seurat_object = function(option_list)
   seqlevelsStyle(annotations)  <- 'UCSC'
   genome(annotations)          <- 'hg38'
   
-  frag.file <- file.path(crange_dir, 'atac_fragments.tsv.gz')
+  cat("atac_sm_1\n")
+  cat(str(atac_sm))
+  cat("\n")
+  
   suppressWarnings(chrom_assay <- CreateChromatinAssay(counts=atac_sm, sep=c(':', '-'),
-                                                       genome='hg38', fragments=frag.file,
+                                                       genome='hg38', fragments=fragfile,
                                                        min.cells=-1, min.features=-1,
                                                        annotation=annotations))
   adata2[['ATAC']] <- chrom_assay
@@ -833,6 +849,9 @@ main = function() {
             "\n\n"))
   option_list <- list(
     make_option(c("--sample_name"), type="character", default=NULL, 
+                metavar="type", 
+                help="Path to tab-separated input file listing regions to analyze. Required."),
+    make_option(c("--fragfile"), type="character", default=NULL, 
                 metavar="type", 
                 help="Path to tab-separated input file listing regions to analyze. Required."),
     make_option(c("--path_processing_outputs"), type="character", default=NULL, 

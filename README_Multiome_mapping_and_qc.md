@@ -1,6 +1,6 @@
 # General: create a conda environment from a .yml  file
 
-$ conda env create -f renv_multiome.yml -p /home/manuel.tardaguila/conda_envs/multiome_QC
+$ conda env create -f renv_multiome.yml -p /home/manuel.tardaguila/conda_envs/multiome_QC_DEF
 
 
 ############################################# 10X Multiome MCO_01326, MCO_01327, MCO_01328 and MCO_01329 runs ############################################
@@ -26,9 +26,9 @@ $ sbatch ~/Scripts/sbatch/6_align_to_barcodes_1.sh /group/soranzo/manuel.tardagu
 $ bash ~/Scripts/Wraper_scripts/119_Filter_Larry_and_graphs_v2.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/deconvolute_LARRY/ count_and_filter /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/deconvolute_LARRY/ <MCO_01330>
 
 
-# 3. QC steps. Conda environment multiome_QC (see Dependencies/multiome_QC.yml).
+# 3. QC steps. Conda environment multiome_QC_DEF (see Dependencies/multiome_QC_DEF.yml).
 
-## 3.1 First pass generates the initial objects (1 x run). Filters of minimum 500 RNA features, minimum 1000 ATAC features and maximum 10% Percent mithochondrial genes. Conda environment multiome_QC (see Dependencies/multiome_QC.yml).
+## 3.1 First pass generates the initial objects (1 x run). Filters of minimum 500 RNA features, minimum 1000 ATAC features and maximum 10% Percent mithochondrial genes. Conda environment multiome_QC_DEF (see Dependencies/multiome_QC_DEF.yml).
 
 $ bash ~/Scripts/Wraper_scripts/120_Seurat_first_v2.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/ processing_outputs
 
@@ -44,13 +44,13 @@ $ bash ~/Scripts/Wraper_scripts/122_snATAC_pipeline.sh /group/soranzo/manuel.tar
 
 $ sbatch ~/Scripts/sbatch/8_merge_atac_peaks.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/
 
-## 3.5 After 3.1 has finished run Amulet to find doublets in ATAC. Conda environment multiome_QC (see Dependencies/multiome_QC.yml).
+## 3.5 After 3.1 has finished run Amulet to find doublets in ATAC. Conda environment multiome_QC_DEF (see Dependencies/multiome_QC_DEF.yml).
 
 $ bash ~/Scripts/Wraper_scripts/123_Amulet.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/ processing_outputs
 
 ## 3.6 after all the previous files have been generated run the second pass per run
 
-$ bash ~/Scripts/Wraper_scripts/125_Seurat_second_pass.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/ processing_outputs
+$ ~/Scripts/Wraper_scripts/125_Seurat_second_pass_v2.sh
 
 ## 3.7 run the merge script to generate one object from the four separate runs
 

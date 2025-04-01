@@ -12,8 +12,8 @@ output_dir=$(echo "$MASTER_ROUTE""$analysis""/")
 
 Log_files=$(echo "$output_dir""/""Log_files/")
  
-#rm -rf $Log_files
-#mkdir -p $Log_files
+rm -rf $Log_files
+mkdir -p $Log_files
 
 conda activate multiome_QC_DEF
 

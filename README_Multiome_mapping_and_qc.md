@@ -54,7 +54,8 @@ $ ~/Scripts/Wraper_scripts/125_Seurat_second_pass_v2.sh
 
 ## 3.7 run the merge script to generate one object from the four separate runs
 
-$ bash ~/Scripts/Wraper_scripts/126_merge_samples.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/ processing_outputs
+$ bash ~/Scripts/Wraper_scripts/126_merge_pre_merged_per_sample_v2.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/ processing_outputs /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/processing_outputs/merged.atac_fragments.tsv.gz
+
 
 ## 3.8 Run as a jupyter notebook: Final_QC_in_the_merged_object.ipynb . Eliminate a cluster for low quality and call final set of peaks with Macs2. Because clustering was taking a long time I run part of the jupyter notebook as a bash script
 

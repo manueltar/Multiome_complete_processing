@@ -2,11 +2,16 @@
 
 eval "$(conda shell.bash hook)"
  
-
+  
 Rscripts_path=$(echo "/home/manuel.tardaguila/Scripts/R/")
 
 MASTER_ROUTE=$1
 analysis=$2
+frag_file=$3
+
+#### (echo "/group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/processing_outputs/merged.atac_fragments.tsv.gz")
+
+##########################################################################
 
 output_dir=$(echo "$MASTER_ROUTE""$analysis""/")
 
@@ -14,11 +19,31 @@ Log_files=$(echo "$output_dir""/""Log_files/")
  
 conda activate multiome_QC_DEF
 
+sample_array=$(echo 'MCO_01326,MCO_01327,MCO_01328,MCO_01329,MCO_01330')
+
+
+### Merge_pre_merged_per_sample
+
+type=$(echo "$sample_array_sel""_""Merge_pre_merged_per_sample")
+outfile_Merge_pre_merged_per_sample=$(echo "$Log_files""outfile_6_""$type"".log")
+touch $outfile_Merge_pre_merged_per_sample
+echo -n "" > $outfile_Merge_pre_merged_per_sample
+name_Merge_pre_merged_per_sample=$(echo "$type""_job")
+
+
+Rscript_Merge_pre_merged_per_sample=$(echo "$Rscripts_path""406_Merge_samples_recall_peaks_v2.R")
+
+
+
+myjobid_Merge_pre_merged_per_sample=$(sbatch --job-name $name_Merge_pre_merged_per_sample --output=$outfile_Merge_pre_merged_per_sample --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=30 --mem-per-cpu=8192 --parsable --wrap="Rscript $Rscript_Merge_pre_merged_per_sample --sample_array $sample_array --frag_file $frag_file --type $type --out $output_dir")
+myjobid_seff_Merge_pre_merged_per_sample=$(sbatch --dependency=afterany:$myjobid_Merge_pre_merged_per_sample --open-mode=append --output=$outfile_Merge_pre_merged_per_sample --job-name="seff" --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=1 --mem-per-cpu=128M --parsable --wrap="seff $myjobid_Merge_pre_merged_per_sample >> $outfile_Merge_pre_merged_per_sampley")
+
+##########################################################################################################################
 
 ### cluster_merged_object
 
 type=$(echo "cluster_merged_object")
-outfile_cluster_merged_object=$(echo "$Log_files""outfile_8_""$type"".log")
+outfile_cluster_merged_object=$(echo "$Log_files""outfile_7_""$type"".log")
 touch $outfile_cluster_merged_object
 echo -n "" > $outfile_cluster_merged_object
 name_cluster_merged_object=$(echo "$type""_job")
@@ -28,8 +53,13 @@ Rscript_cluster_merged_object=$(echo "$Rscripts_path""408_Clustering_of_merged_s
 
 filtered_db_object=$(echo "$output_dir""merged_unprocessed_db_filt.rds")
 
-myjobid_cluster_merged_object=$(sbatch --job-name $name_cluster_merged_object --output=$outfile_cluster_merged_object --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=30 --mem-per-cpu=8192 --parsable --wrap="Rscript $Rscript_cluster_merged_object --filtered_db_object $filtered_db_object --type $type --out $output_dir")
+# --dependency=afterany:
+ 
+myjobid_cluster_merged_object=$(sbatch --dependency=afterany:$myjobid_Merge_pre_merged_per_sample --job-name $name_cluster_merged_object --output=$outfile_cluster_merged_object --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=30 --mem-per-cpu=8192 --parsable --wrap="Rscript $Rscript_cluster_merged_object --filtered_db_object $filtered_db_object --type $type --out $output_dir")
 myjobid_seff_cluster_merged_object=$(sbatch --dependency=afterany:$myjobid_cluster_merged_object --open-mode=append --output=$outfile_cluster_merged_object --job-name="seff" --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=1 --mem-per-cpu=128M --parsable --wrap="seff $myjobid_cluster_merged_object >> $outfile_cluster_merged_object")
+
+
+exit
 
 ##########################################################################################################################
 
@@ -48,7 +78,7 @@ db_filt_clustered=$(echo "$output_dir""merged_unprocessed_db_filt_clustered.rds"
 
 # --dependency=afterany:
 
-myjobid_filter_out_cluster=$(sbatch --dependency=afterany:$myjobid_cluster_merged_object --job-name $name_filter_out_cluster --output=$outfile_filter_out_cluster --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=20 --mem-per-cpu=8192 --parsable --wrap="Rscript $Rscript_filter_out_cluster --db_filt_clustered $db_filt_clustered --type $type --out $output_dir")
+myjobid_filter_out_cluster=$(sbatch --job-name $name_filter_out_cluster --output=$outfile_filter_out_cluster --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=20 --mem-per-cpu=8192 --parsable --wrap="Rscript $Rscript_filter_out_cluster --db_filt_clustered $db_filt_clustered --type $type --out $output_dir")
 myjobid_seff_filter_out_cluster=$(sbatch --dependency=afterany:$myjobid_filter_out_cluster --open-mode=append --output=$outfile_filter_out_cluster --job-name="seff" --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=1 --mem-per-cpu=128M --parsable --wrap="seff $myjobid_filter_out_cluster >> $outfile_filter_out_cluster")
 
 ##########################################################################################################################
@@ -110,9 +140,8 @@ merged_unprocessed_db_filt_clustered_minus_26_MACS2_peaks_HARMONY_clustered=$(ec
 
 # --dependency=afterany:$myjobid_Harmony_integration
 
-myjobid_Export_RNA_for_CellTypist=$(sbatch --dependency=afterany:$myjobid_Harmony_integration --job-name $name_Export_RNA_for_CellTypist --output=$outfile_Export_RNA_for_CellTypist --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=10 --mem-per-cpu=8192 --parsable --wrap="Rscript $Rscript_Export_RNA_for_CellTypist --merged_unprocessed_db_filt_clustered_minus_26_MACS2_peaks_HARMONY_clustered $merged_unprocessed_db_filt_clustered_minus_26_MACS2_peaks_HARMONY_clustered --type $type --out $output_dir")
+myjobid_Export_RNA_for_CellTypist=$(sbatch --job-name $name_Export_RNA_for_CellTypist --output=$outfile_Export_RNA_for_CellTypist --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=10 --mem-per-cpu=8192 --parsable --wrap="Rscript $Rscript_Export_RNA_for_CellTypist --merged_unprocessed_db_filt_clustered_minus_26_MACS2_peaks_HARMONY_clustered $merged_unprocessed_db_filt_clustered_minus_26_MACS2_peaks_HARMONY_clustered --type $type --out $output_dir")
 myjobid_seff_Export_RNA_for_CellTypist=$(sbatch --dependency=afterany:$myjobid_Export_RNA_for_CellTypist --open-mode=append --output=$outfile_Export_RNA_for_CellTypist --job-name="seff" --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=1 --mem-per-cpu=128M --parsable --wrap="seff $myjobid_Export_RNA_for_CellTypist >> $outfile_Export_RNA_for_CellTypist")
 
 
 conda deactivate
- 

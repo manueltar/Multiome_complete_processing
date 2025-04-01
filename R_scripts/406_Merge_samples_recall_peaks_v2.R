@@ -35,7 +35,7 @@ opt = NULL
 
 options(warn = -1)
 
-merge_and_recall_peaks = function(option_list)
+merge_and_filter_doublets = function(option_list)
 {
   
   opt_in = option_list
@@ -72,15 +72,40 @@ merge_and_recall_peaks = function(option_list)
   
   adatas <- list()
   
+  Windows    = c()
+  
+  
   for(i in 1:length(sample_array)){
     
     sample_array_sel<-sample_array[i]
     
     cat("---------------------------------------->\t") 
     cat(sprintf(as.character(sample_array_sel)))
-    cat("\n")    
+    cat("\n")
     
-    path_processing_outputs = paste(out,sample_array_sel,'/',sep='')
+    if(sample_array_sel == 'MCO_01326' | sample_array_sel == 'MCO_01327' | sample_array_sel == 'MCO_01328' | sample_array_sel == 'MCO_01329'){
+      
+      path_processing_outputs = paste('/group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/processing_outputs/',sample_array_sel,'/',sep='')
+      
+      Diff<-'Diff_MK'
+      
+      
+    }else{
+      
+      if(sample_array_sel == 'MCO_01330' | sample_array_sel == 'MCO_01331' | sample_array_sel == 'MCO_01332' | sample_array_sel == 'MCO_01333'){
+        
+        path_processing_outputs = paste('/group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/processing_outputs/',sample_array_sel,'/',sep='')
+        
+        Diff<-'Diff_lymph'
+        
+        
+      }else{
+        
+        # Do nothing
+      }
+      
+    }#sample_array_sel == 'MCO_01326' | sample_array_sel == 'MCO_01327' | sample_array_sel == 'MCO_01328' | sample_array_sel == 'MCO_01329'
+    
     
     if (file.exists(path_processing_outputs)){
       
@@ -91,6 +116,9 @@ merge_and_recall_peaks = function(option_list)
       
     }#path_processing_outputs
     
+    sample_dir <- path_processing_outputs
+    wind       = readLines(paste0(sample_dir, "snATAC_matrices/", sample_array_sel, "_snATAC_pipeline_job.regions"))
+    Windows = c(Windows, wind)
     
     pre_merge_dir = paste(path_processing_outputs,'pre_merge','/',sep='')
     
@@ -108,6 +136,7 @@ merge_and_recall_peaks = function(option_list)
     adata <- readRDS("pre_merged.rds")
     
     adata@meta.data$orig.ident = sample_array_sel
+    adata@meta.data$Diff <- Diff
     adatas[[sample_array_sel]] <- adata
     DefaultAssay(adatas[[sample_array_sel]]) <- "RNA"
     adatas[[sample_array_sel]][['ATAC']] <- NULL
@@ -201,11 +230,82 @@ merge_and_recall_peaks = function(option_list)
   cat(str(merged))
   cat("\n")
   
+  #### Make sure all windows of ATAC peaks are represented -----
+  
+  atacm = GetAssayData(merged, layer = "counts", assay = "ATAC")
+  
+  
+  
+  cat("Windows per file\n")
+  cat(sprintf(as.character(length(Windows))))
+  cat("\n")
+  cat("Unique windows per file\n")
+  cat(sprintf(as.character(length(unique(Windows)))))
+  cat("\n")
+  
+  cat("Unique windows merged\n")
+  cat(sprintf(as.character(dim(atacm)[1])))
+  cat("\n")
+  
+  ##### Make a list of the genes corrected by CellBender (QC purposes) --------------
+  
+
+  celb_mat    = GetAssayData(merged, layer = "counts", assay = "RNA")
+  raw_mat     = GetAssayData(merged, layer = "counts", assay = "RNA_raw")
+  fract       = celb_mat/raw_mat
+  means       = rowMeans(fract, na.rm=T)
+  sorted_list = 1-sort(means)
+  
+  cat("fract\n")
+  cat(str(fract))
+  cat("\n")
+  
+  cat("means\n")
+  cat(str(means))
+  cat("\n")
+  
+  
+  cat("sorted_list_CELL_BENDER_list\n")
+  cat(str(sorted_list))
+  cat("\n")
+  
+  Genes_corrected_more_than_0.25<-sorted_list[which(sorted_list >= 0.25)]
+  
+  cat("Genes_corrected_more_than_0.25\n")
+  cat(str(Genes_corrected_more_than_0.25))
+  cat("\n")
+  
+  cat(sprintf(as.character(names(summary(Genes_corrected_more_than_0.25)))))
+  cat("\n")
+  cat(sprintf(as.character(summary(Genes_corrected_more_than_0.25))))
+  cat("\n")
+  
+  ############ RMV cells with 0 counts after CellBender correction -----------------------------------------
+  
+  merged <- merged[, unname(which( colSums(GetAssayData(merged, slot = "counts", assay = "RNA"))!=0))]
+  
+  
+  
+  ##### Filter doublets called by both amulet and scDB merged2 --------------------------------
+  
+  
+  merged@meta.data$doublet= with(merged@meta.data, doublet_amulet == TRUE & 
+                                  scDblFinder.class_atac=="doublet" & scDblFinder.class=="doublet")
+  
+  
+  merged2<-subset(merged, doublet == FALSE)
+  
+  
+  
+  
+  
   ###### SAVE -----
   
   setwd(out)
   
-  saveRDS(merged, file = 'merged_unprocessed.rds')
+  #### saveRDS(merged, file = 'merged_unprocessed.rds')
+  
+  saveRDS(merged2, file="merged_unprocessed_db_filt.rds")
   
   
   
@@ -251,7 +351,7 @@ main = function() {
                         option_list = option_list)
   opt <<- parse_args(parser)
   
-  merge_and_recall_peaks(opt)
+  merge_and_filter_doublets(opt)
  
 
 }

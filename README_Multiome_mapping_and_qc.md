@@ -20,7 +20,7 @@ $ sbatch ~/Scripts/sbatch/5_Cell_ranger_arccount.sh /group/soranzo/manuel.tardag
 
 $ bash ~/Scripts/Wraper_scripts/120_Seurat_first_v2.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/ processing_outputs
 
-## 3.2 In parallel to 3.1 run CellBender correction of ambient RNA
+## 3.2 In parallel to 3.1 run CellBender correction of ambient RNA. IT HAS TO BE LAUNCHED FROM: processing_outputs/$SAMPLE/
 
 $ sbatch ~/Scripts/sbatch/7_CellBender.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/ MCO_01330
 

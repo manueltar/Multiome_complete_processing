@@ -532,7 +532,7 @@ graph_function = function(option_list)
       cat("\n")
     }
     
-    fill_colours<-c(brewer.pal(12, "Set3"),'black')
+    fill_colours<-c(brewer.pal(9, "Greens")[c(5,6,7)],brewer.pal(9, "Reds")[c(5,6,7)],brewer.pal(9, "Purples")[c(5,6,7)],brewer.pal(9, "Blues")[c(4,5,6)],'gray','black')
     
     if(DEBUG == 1){
       cat("--------------------fill_colours------------------>\t")

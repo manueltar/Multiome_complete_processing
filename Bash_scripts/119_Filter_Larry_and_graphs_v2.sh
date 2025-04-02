@@ -1,9 +1,10 @@
 #!/bin/bash
-  
+    
 MASTER_ROUTE=$1
 analysis=$2
+indir=$3
 
-    
+
 Rscripts_path=$(echo "/home/manuel.tardaguila/Scripts/R/")
 module load R/4.1.0
 
@@ -33,8 +34,10 @@ seff_name=$(echo "seff""_""$type")
  
 Rscript_Larry_counts_and_filter=$(echo "$Rscripts_path""402_Larry_counts_CHEK2.R")
 
-indir=$(echo "/group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/deconvolute_LARRY/")
-samples=$(echo "MCO_01326,MCO_01327,MCO_01328,MCO_01329")
+
+samples=$(echo "MCO_01330,MCO_01331,MCO_01332,MCO_01333")
+
+
 Threshold_attributed_genotypes=$(echo "1")
 Threshold_UMIS_per_cell=$(echo "3")
 genotypes_string=$(echo "chrGFP_WTA,chrGFP_WTB,chrGFP_WTC,chrGFP_rs1,chrGFP_rs2,chrGFP_rs3,chrGFP_R882H1,chrGFP_R882H2,chrGFP_R882H3,chrGFP_rs_R882H1,chrGFP_rs_R882H2,chrGFP_rs_R882H3,No_GFPbcs")

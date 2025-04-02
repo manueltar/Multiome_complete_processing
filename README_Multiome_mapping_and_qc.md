@@ -2,31 +2,19 @@
 
 $ conda env create -f renv_multiome.yml -p /home/manuel.tardaguila/conda_envs/multiome_QC_DEF
 
-
-############################################# 10X Multiome MCO_01326, MCO_01327, MCO_01328 and MCO_01329 runs ############################################
-############################################# 10X Multiome MCO_01326, MCO_01327, MCO_01328 and MCO_01329 runs ############################################
-############################################# 10X Multiome MCO_01326, MCO_01327, MCO_01328 and MCO_01329 runs ############################################
-
-
 # These are the lines corresponding to the multiome mapping and Quality Control (QC)
+
+############################################# BLOCK 1 of code ############################################
+############################################# BLOCK 1 of code ############################################
+############################################# BLOCK 1 of code ############################################
 
 # 1. Map reads of the GEX and ATAC modalities using cellranger-arc count
 
 $ sbatch ~/Scripts/sbatch/5_Cell_ranger_arccount.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/ <sample_id> (e.g. MCO_01330)
 
-
-# 2. Map unaligned GEX reads to our reference of cell barcodes and count them. Assign barcode to a cell if 1) only one barcode association (no conflicting assignations) and 2) at least three different UMIs support the barcode assignation
-
-  (First index the reference genome of barcodes)
-  
-$ bwa-mem2 index /group/soranzo/manuel.tardaguila/Multiome/RITM0023280/special_reference_files/GFP_transgene_vCHEK2_and_DNMT3A.fa
-
-$ sbatch ~/Scripts/sbatch/6_align_to_barcodes_1.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/ /group/soranzo/manuel.tardaguila/Multiome/RITM0023280/special_reference_files/GFP_transgene_vCHEK2_and_DNMT3A.fa <MCO_01330>
-
-$ bash ~/Scripts/Wraper_scripts/119_Filter_Larry_and_graphs_v2.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/deconvolute_LARRY/ count_and_filter /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/deconvolute_LARRY/ <MCO_01330>
-
-
-# 3. QC steps. Conda environment multiome_QC_DEF (see Dependencies/multiome_QC_DEF.yml).
+############################################# BLOCK 2 of code ############################################
+############################################# BLOCK 2 of code ############################################
+############################################# BLOCK 2 of code ############################################
 
 ## 3.1 First pass generates the initial objects (1 x run). Filters of minimum 500 RNA features, minimum 1000 ATAC features and maximum 10% Percent mithochondrial genes. Conda environment multiome_QC_DEF (see Dependencies/multiome_QC_DEF.yml).
 
@@ -44,15 +32,39 @@ $ bash ~/Scripts/Wraper_scripts/122_snATAC_pipeline.sh /group/soranzo/manuel.tar
 
 $ sbatch ~/Scripts/sbatch/8_merge_atac_peaks.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/
 
+
+# 2. Map unaligned GEX reads to our reference of cell barcodes and count them. Assign barcode to a cell if 1) only one barcode association (no conflicting assignations) and 2) at least three different UMIs support the barcode assignation
+
+  (First index the reference genome of barcodes)
+  
+$ bwa-mem2 index /group/soranzo/manuel.tardaguila/Multiome/RITM0023280/special_reference_files/GFP_transgene_vCHEK2_and_DNMT3A.fa
+
+$ sbatch ~/Scripts/sbatch/6_align_to_barcodes_v2.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/ /group/soranzo/manuel.tardaguila/Multiome/RITM0023280/special_reference_files/GFP_transgene_vCHEK2_and_DNMT3A.fa <MCO_01330>
+
+$ bash ~/Scripts/Wraper_scripts/119_Filter_Larry_and_graphs_v2.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/deconvolute_LARRY/ count_and_filter /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/deconvolute_LARRY/ <MCO_01330>
+
+
+############################################# BLOCK 3 of code ############################################
+############################################# BLOCK 3 of code ############################################
+############################################# BLOCK 3 of code ############################################
+
 ## 3.5 After 3.1 has finished run Amulet to find doublets in ATAC. Conda environment multiome_QC_DEF (see Dependencies/multiome_QC_DEF.yml).
 
 $ bash ~/Scripts/Wraper_scripts/123_Amulet.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/ processing_outputs
 
 ## 3.6 after all the previous files have been generated run the second pass per run
 
+############################################# BLOCK 4 of code ############################################
+############################################# BLOCK 4 of code ############################################
+############################################# BLOCK 4 of code ############################################
+
 $ ~/Scripts/Wraper_scripts/125_Seurat_second_pass_v2.sh
 
 ## 3.7 run the merge script to generate one object from the four separate runs
+
+############################################# BLOCK 5 of code ############################################
+############################################# BLOCK 5 of code ############################################
+############################################# BLOCK 5 of code ############################################
 
 $ bash ~/Scripts/Wraper_scripts/126_merge_pre_merged_per_sample_v2.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/ processing_outputs /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/processing_outputs/merged.atac_fragments.tsv.gz
 

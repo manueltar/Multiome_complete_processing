@@ -5,7 +5,7 @@
 #SBATCH --partition=cpuq
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=32
-#SBATCH --output=Deconvolve_Larry.log
+#SBATCH --output=Deconvolve_Larry_%j.log
 #SBATCH --mem=64G
 #SBATCH --time=36:00:00
 
@@ -19,11 +19,9 @@ samp=$3
 
 Larry_deconvolve_dir=$(echo "$output_dir""deconvolute_LARRY")
 
-rm -rf $Larry_deconvolve_dir
-mkdir -p $Larry_deconvolve_dir 
-
 cd $Larry_deconvolve_dir
 
+echo "$samp"
 
 dir=$(echo "$output_dir""$samp""/""outs")
 

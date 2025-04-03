@@ -225,7 +225,7 @@ create_the_premerged_Seurat_object = function(option_list)
   
   colkeep = c('scDblFinder.class','scDblFinder.score','scDblFinder.weighted','scDblFinder.cxds_score',
               'scDblFinder.class_atac','scDblFinder.score_atac','scDblFinder.weighted_atac','scDblFinder.cxds_score_atac',
-              'No_assigned_GFPbc','Assigned_GFPbc','Assigned_GFPgenotype','DBL_comb')
+              'DBL_comb')
   
   adata2@meta.data = cbind(adata2@meta.data,old_meta[,colkeep])
   
@@ -248,37 +248,9 @@ create_the_premerged_Seurat_object = function(option_list)
   
   adata2 <- adata2[, unname(which( colSums(GetAssayData(adata2, slot = "counts", assay = "RNA"))!=0))]
   
-  ### Analyze and cluster
-  # RNA analysis
-  DefaultAssay(adata2) <- 'RNA'
-  adata2 <- SCTransform(adata2, verbose = FALSE) 
-  adata2 <- RunPCA(adata2) 
-  adata2 <- RunUMAP(adata2, dims=1:50, reduction.name='umap.rna', reduction.key='rnaUMAP_')
-  
-  
-  
-  
-  
-  # ATAC analysis
-  # We exclude the first dimension as this is typically correlated with sequencing depth
-  DefaultAssay(adata2) <- 'ATAC'
-  adata2 <- RunTFIDF(adata2)
-  adata2 <- FindTopFeatures(adata2, min.cutoff='q0')
-  adata2 <- RunSVD(adata2)
-  adata2 <- RunUMAP(adata2, reduction='lsi', dims=2:50, reduction.name='umap.atac', reduction.key='atacUMAP_')
-  
-  # Multimodal analysis
-  adata2 <- FindMultiModalNeighbors(adata2, reduction.list=list('pca', 'lsi'), dims.list=list(1:50, 2:50))
-  adata2 <- RunUMAP(adata2, nn.name='weighted.nn', reduction.name='umap.wnn', reduction.key='wnnUMAP_')
-  adata2 <- FindClusters(adata2, graph.name='wsnn', algorithm=4, resolution = .2, verbose=FALSE)
-  
-  
-  
-  
-  
-  
-  
   ###### SAVE -----
+  
+  
   
   saveRDS(adata2, file = file.path(premerge_dir,'pre_merged.rds'))
   
@@ -286,125 +258,7 @@ create_the_premerged_Seurat_object = function(option_list)
   
 }
 
-graph_function = function(option_list)
-{
-  
-  
-  #### READ and transform sample_name ----
-  
-  sample_name = opt$sample_name
-  
-  cat("sample_name_\n")
-  cat(sprintf(as.character(sample_name)))
-  cat("\n")
-  
-  #### READ and transform type ----
-  
-  type = opt$type
-  
-  cat("TYPE_\n")
-  cat(sprintf(as.character(type)))
-  cat("\n")
-  
-  
-  #### READ and transform out ----
-  
-  out = opt$out
-  
-  cat("out_\n")
-  cat(sprintf(as.character(out)))
-  cat("\n")
-  
-  path_processing_outputs = opt$path_processing_outputs
-  
-  cat("path_processing_outputs_0\n")
-  cat(sprintf(as.character(path_processing_outputs)))
-  cat("\n")
-  
-  intermediate_dir = opt$intermediate_dir
-  
-  cat("intermediate_dir_0\n")
-  cat(sprintf(as.character(intermediate_dir)))
-  cat("\n")
-  
-  snATAC_dir = opt$snATAC_dir
-  
-  cat("snATAC_dir_0\n")
-  cat(sprintf(as.character(snATAC_dir)))
-  cat("\n")
-  
-  crange_dir = opt$crange_dir
-  
-  cat("crange_dir_0\n")
-  cat(sprintf(as.character(crange_dir)))
-  cat("\n")
-  
-  premerge_dir = opt$premerge_dir
-  
-  cat("premerge_dir_0\n")
-  cat(sprintf(as.character(premerge_dir)))
-  cat("\n")
-  
-  ##### Read the preprocessed object ------
-  
-  setwd(premerge_dir)
-  
-  adata<-readRDS(file="pre_merged.rds")
-  
-  # cat("adata_0\n")
-  # cat(str(adata))
-  # cat("\n")
-  
-  metadata_adata<-adata[[]]
-  
-  cat("metadata_adata_0\n")
-  cat(str(metadata_adata))
-  cat("\n")
-  
-  
-  
-  ########### Plot Intermediate_metrics ---------------
-  
-  cat("Plot Intermediate_metrics\n")
-  
-  sample_color = as.numeric(substring(sample_name, 7))
-  ncells = read.csv(file.path(crange_dir, "summary.csv"))$Estimated.number.of.cells
-  
-  
-  
-  setwd(premerge_dir)
-  
-  Idents(adata) <- "orig.ident"
-  
-  options(repr.plot.width = 10, repr.plot.height = 5)
-  png(file.path(premerge_dir,'Intermediate_metrics.png'), width =800, height = 400)
-    VlnPlot(adata, features = c("nCount_ATAC", "nCount_RNA", "percent.mt",'TSS.enrichment'),
-            ncol = 4, cols=sample_color,
-            log = TRUE, pt.size = 0)+ NoLegend()
-  dev.off()
-  
-  
-  
-  
-  Vln_file<-VlnPlot(adata, features = c("nCount_ATAC", "nCount_RNA", "percent.mt",'TSS.enrichment'),  
-                    ncol = 4, cols=sample_color,
-                    log = TRUE, pt.size = 0)+ NoLegend()
-  
-  # saveRDS(Vln_file,file="Intermediate_metrics_graph.rds")
-  
-  
-  graph <- Vln_file +
-    plot_layout( guides = "collect") & theme(text = element_text(size = 8, family = "Arial"))
 
-  # ggsave(p, filename = "plot.pdf", device=cairo_pdf, height=20, width=16, unit="cm", path=NULL, scale=1)
-  # ggsave(p, filename = "plot.svg", device=svg, height=20, width=16, unit="cm", path=NULL, scale=1)
-
-  ggsave(graph, filename = paste("Intermediate_metrics","_plot.pdf", sep=''), device=cairo_pdf, height=20, width=16, unit="cm", path=NULL, scale=1)
-  
-  
- 
- 
-}
 
 
 printList = function(l, prefix = "    ") {
@@ -465,7 +319,6 @@ main = function() {
   opt <<- parse_args(parser)
   
   create_the_premerged_Seurat_object(opt)
-  graph_function(opt)
 
 }
 

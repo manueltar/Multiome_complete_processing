@@ -8,7 +8,7 @@ Rscripts_path=$(echo "/home/manuel.tardaguila/Scripts/R/")
 conda activate multiome_QC_DEF
 
 #sample_array=$(echo 'MCO_01326,MCO_01327,MCO_01328,MCO_01329,MCO_01330')
-sample_array=$(echo 'MCO_01330')
+sample_array=$(echo 'MCO_01330,MCO_01331,MCO_01332,MCO_01333')
 
 
 a=($(echo "$sample_array" | tr "," '\n'))
@@ -20,6 +20,9 @@ do
 
     sample_array_sel=$i
     echo "$sample_array_sel"
+
+##   rm -rf $premerge_dir ######################################################################### SECURITY
+##   mkdir -p $premerge_dir ####################################################################### SECURITY
 
      if [[ ($sample_array_sel = 'MCO_01326') || ($sample_array_sel = 'MCO_01327') || ($sample_array_sel = 'MCO_01328') || ($sample_array_sel = 'MCO_01329') ]]; then
 
@@ -56,6 +59,7 @@ do
    echo "$premerge_dir"
    echo "$fragfile"
 
+   
    rm -rf $premerge_dir
    mkdir -p $premerge_dir
 
@@ -68,7 +72,7 @@ do
     name_Seurat_second_pass=$(echo "$type""_job")
 
  
-    Rscript_Seurat_second_pass=$(echo "$Rscripts_path""405_Seurat_second_pass_v2.R")
+    Rscript_Seurat_second_pass=$(echo "$Rscripts_path""405_Seurat_second_pass_v3.R")
 
     sample_name=$sample_array_sel
  

@@ -179,7 +179,7 @@ merge_and_filter_doublets = function(option_list)
   }#i in 1:length(sample_array)
   
   
-  merged = merge(x =adatas[[1]], y=adatas[2:4], add.cell.ids = sample_array )
+  merged = merge(x =adatas[[1]], y=adatas[2:8], add.cell.ids = sample_array )
   
   cat("merged_0\n")
   cat(str(merged))
@@ -229,6 +229,10 @@ merge_and_filter_doublets = function(option_list)
   cat("merged_2\n")
   cat(str(merged))
   cat("\n")
+  
+  setwd(out)
+  
+  saveRDS(merged, file = 'merged_unprocessed.rds')
   
   #### Make sure all windows of ATAC peaks are represented -----
   

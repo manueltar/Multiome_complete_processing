@@ -68,10 +68,19 @@ $ ~/Scripts/Wraper_scripts/125_Seurat_second_pass_v2.sh
 
 $ bash ~/Scripts/Wraper_scripts/126_merge_pre_merged_per_sample_v2.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/ processing_outputs /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/processing_outputs/merged.atac_fragments.tsv.gz
 
+############################################# BLOCK 6 of code ############################################
+############################################# BLOCK 6 of code ############################################
+############################################# BLOCK 6 of code ############################################
 
 ## 3.8 Run as a jupyter notebook: Final_QC_in_the_merged_object.ipynb . Eliminate a cluster for low quality and call final set of peaks with Macs2. Because clustering was taking a long time I run part of the jupyter notebook as a bash script
 
-$ bash ~/Scripts/Wraper_scripts/126_clusters_and_macs2.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/ processing_outputs
+############################################# BLOCK 7 of code ############################################
+############################################# BLOCK 7 of code ############################################
+############################################# BLOCK 7 of code ############################################
+
+$ bash ~/Scripts/Wraper_scripts/153_Recluster_and_export_h5ad.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/ processing_outputs
+
+
 
 ############################################# targeted amplification of the GEX libraries #################################################################
 ############################################# targeted amplification of the GEX libraries #################################################################

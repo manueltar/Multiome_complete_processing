@@ -10,6 +10,11 @@ RPCA_explore.ipynb
 
 $ bash ~/Scripts/Wraper_scripts/143_Multiome_DE_per_identity.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/Downstream_analysis_cluster_after_genotyping/AFTER_RPCA_INTEGRATION/ DE_per_identity
 
+(For DNMT3A reference run)
+
+$ bash ~/Scripts/Wraper_scripts/161_GSEA_and_ORA_for_single_cell_change_reference_to_DNMT3A.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/Downstream_analysis_cluster_after_genotyping/AFTER_RPCA_INTEGRATION/ DE_per_identity_change_ref_to_DNMT3A
+
+
 # To run the bespoke heatmap and logpval of pathways run
 
 $ bash ~/Scripts/Wraper_scripts/145_Multiome_bespoke_heatmaps.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/Downstream_analysis_cluster_after_genotyping/AFTER_RPCA_INTEGRATION/ DE_per_identity /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/Downstream_analysis_cluster_after_genotyping/AFTER_RPCA_INTEGRATION/DE_per_identity/genes_GSEA_annotated.tsv
@@ -21,6 +26,7 @@ $ bash ~/Scripts/Wraper_scripts/138_MACS2_recall_peaks_by_cell_type_integrated_a
 # To link all DE genes to the chromatin peaks
 
 $ bash ~/Scripts/Wraper_scripts/133_Link_peaks_NEW_peaks.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/ Downstream_analysis_cluster_after_genotyping
+
 
 # To run the DA analysis:
 

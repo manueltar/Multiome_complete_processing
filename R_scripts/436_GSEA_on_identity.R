@@ -391,157 +391,156 @@ GSEA_function = function(option_list)
       cat("\n")
     }
     
-    
-    
-    # Prepare ALL genes results -----------------------------------------------
-    
-    
-    
-    DE_result_sel$ENTREZID <- mapIds(org.Hs.eg.db, keys=DE_result_sel$gene, keytype="SYMBOL",
-                                     column="ENTREZID", multiVals=multiVals)
-    
-    if(DEBUG == 1){
-    cat("DE_result_sel_2\n")
-    str(DE_result_sel)
-    cat("\n")
-    }
-    
-    
-    DE_result_sel_with_ENTREZ<-DE_result_sel[-which(DE_result_sel$ENTREZID == "NA"),]
-    
-    if(DEBUG == 1){
-    cat("DE_result_sel_with_ENTREZ_0\n")
-    str(DE_result_sel_with_ENTREZ)
-    cat("\n")
-    }
-    
-    
-    # LOOP per contrast and cell type -----------------------------------------------------------------
-    
-    
-    array_contrasts<-unique(DE_result_sel_with_ENTREZ$contrast)
-    
-    if(DEBUG == 1){
-    cat("array_contrasts\n")
-    str(array_contrasts)
-    cat("\n")
-    }
-    
-    
-    
-    
-    
-    
-    bg_files <- list.files(path = out_path, pattern = '_selected.rds$', full.names = TRUE)
-    
-    if(DEBUG == 1){
-    cat("bg_files_0\n")
-    str(bg_files)
-    cat("\n")
-    }
-   
-    
-    contrast_list<-list()
-    
-    for(k in 1:length(array_contrasts)){
-      
-      contrast_df<-data.frame()
+    if(dim(DE_result_sel)[1] >0){
+      # Prepare ALL genes results -----------------------------------------------
       
       
-      contrast_sel<-array_contrasts[k]
       
-      cat("-------------------------------------------------------------------------------------------------------------------------------------------->\t")
-      cat(sprintf(as.character(k)))
-      cat("\t")
-      cat(sprintf(as.character(contrast_sel)))
-      cat("\n")
+      DE_result_sel$ENTREZID <- mapIds(org.Hs.eg.db, keys=DE_result_sel$gene, keytype="SYMBOL",
+                                       column="ENTREZID", multiVals=multiVals)
       
-      DE_result_sel_with_ENTREZ_sel<-DE_result_sel_with_ENTREZ[which(DE_result_sel_with_ENTREZ$contrast == contrast_sel),]
+      if(DEBUG == 1){
+        cat("DE_result_sel_2\n")
+        str(DE_result_sel)
+        cat("\n")
+      }
       
-      if(dim(DE_result_sel_with_ENTREZ_sel)[1] > 0){
+      
+      DE_result_sel_with_ENTREZ<-DE_result_sel[-which(DE_result_sel$ENTREZID == "NA"),]
+      
+      if(DEBUG == 1){
+        cat("DE_result_sel_with_ENTREZ_0\n")
+        str(DE_result_sel_with_ENTREZ)
+        cat("\n")
+      }
+      
+      
+      # LOOP per contrast and cell type -----------------------------------------------------------------
+      
+      
+      array_contrasts<-unique(DE_result_sel_with_ENTREZ$contrast)
+      
+      if(DEBUG == 1){
+        cat("array_contrasts\n")
+        str(array_contrasts)
+        cat("\n")
+      }
+      
+      
+      
+      
+      
+      
+      bg_files <- list.files(path = out_path, pattern = '_selected.rds$', full.names = TRUE)
+      
+      if(DEBUG == 1){
+        cat("bg_files_0\n")
+        str(bg_files)
+        cat("\n")
+      }
+      
+      
+      contrast_list<-list()
+      
+      for(k in 1:length(array_contrasts)){
         
-        if(DEBUG ==1){
-          
-          cat("DE_result_sel_with_ENTREZ_sel_0\n")
-          cat(str(DE_result_sel_with_ENTREZ_sel))
-          cat("\n")
-        }
+        contrast_df<-data.frame()
         
         
+        contrast_sel<-array_contrasts[k]
         
+        cat("-------------------------------------------------------------------------------------------------------------------------------------------->\t")
+        cat(sprintf(as.character(k)))
+        cat("\t")
+        cat(sprintf(as.character(contrast_sel)))
+        cat("\n")
         
-        DE_result_sel_with_ENTREZ_sel_ordered<-DE_result_sel_with_ENTREZ_sel[order(DE_result_sel_with_ENTREZ_sel$log2FoldChange, decreasing=TRUE),]
+        DE_result_sel_with_ENTREZ_sel<-DE_result_sel_with_ENTREZ[which(DE_result_sel_with_ENTREZ$contrast == contrast_sel),]
         
-        if(DEBUG ==1){
-          
-          cat("DE_result_sel_with_ENTREZ_sel_ordered_0\n")
-          cat(str(DE_result_sel_with_ENTREZ_sel_ordered))
-          cat("\n")
-        }
-        
-        
-        List_bg_files<-list()
-        
-        
-        for(iteration_bg_files in 1:length(bg_files)){
-          
-          
-          
-          selected_collection<-bg_files[iteration_bg_files]
-          
-          cat("--------------------------------------------------------------------->\t")
-          cat(sprintf(as.character(iteration_bg_files)))
-          cat("\t")
-          cat(sprintf(as.character(selected_collection)))
-          cat("\n")
-          
-          selected_collection_df<-readRDS(file=selected_collection)
+        if(dim(DE_result_sel_with_ENTREZ_sel)[1] > 0){
           
           if(DEBUG ==1){
             
-            cat("selected_collection_df_0\n")
-            str(selected_collection_df)
+            cat("DE_result_sel_with_ENTREZ_sel_0\n")
+            cat(str(DE_result_sel_with_ENTREZ_sel))
             cat("\n")
           }
           
           
-          FLAG_custom<-length(grep("Custom_Soranzo_",selected_collection))
           
           
+          DE_result_sel_with_ENTREZ_sel_ordered<-DE_result_sel_with_ENTREZ_sel[order(DE_result_sel_with_ENTREZ_sel$log2FoldChange, decreasing=TRUE),]
           
-          cat("FLAG_custom_0\n")
-          str(FLAG_custom)
-          cat("\n")
+          if(DEBUG ==1){
+            
+            cat("DE_result_sel_with_ENTREZ_sel_ordered_0\n")
+            cat(str(DE_result_sel_with_ENTREZ_sel_ordered))
+            cat("\n")
+          }
           
-          if(FLAG_custom == 0){
+          
+          List_bg_files<-list()
+          
+          
+          for(iteration_bg_files in 1:length(bg_files)){
             
-            minGSSize_spec<-10
-            maxGSSize_spec<-500
-
             
-          }else{
             
-            setwd(out_path)
+            selected_collection<-bg_files[iteration_bg_files]
             
-
+            cat("--------------------------------------------------------------------->\t")
+            cat(sprintf(as.character(iteration_bg_files)))
+            cat("\t")
+            cat(sprintf(as.character(selected_collection)))
+            cat("\n")
             
-            minGSSize_spec<-1
-            maxGSSize_spec<-600
+            selected_collection_df<-readRDS(file=selected_collection)
             
-
             if(DEBUG ==1){
               
               cat("selected_collection_df_0\n")
               str(selected_collection_df)
               cat("\n")
             }
-            # universe<-unique(selected_collection_df$gene)
             
-          }
-          
-          
-          
-           #### Key function of GSEA -----------------------------------------------
+            
+            FLAG_custom<-length(grep("Custom_Soranzo_",selected_collection))
+            
+            
+            
+            cat("FLAG_custom_0\n")
+            str(FLAG_custom)
+            cat("\n")
+            
+            if(FLAG_custom == 0){
+              
+              minGSSize_spec<-10
+              maxGSSize_spec<-500
+              
+              
+            }else{
+              
+              setwd(out_path)
+              
+              
+              
+              minGSSize_spec<-1
+              maxGSSize_spec<-600
+              
+              
+              if(DEBUG ==1){
+                
+                cat("selected_collection_df_0\n")
+                str(selected_collection_df)
+                cat("\n")
+              }
+              # universe<-unique(selected_collection_df$gene)
+              
+            }
+            
+            
+            
+            #### Key function of GSEA -----------------------------------------------
             
             geneList<-DE_result_sel_with_ENTREZ_sel_ordered$log2FoldChange
             
@@ -558,10 +557,10 @@ GSEA_function = function(option_list)
             FLAG_overlap<-length(which(names(geneList)%in%selected_collection_df$gene))
             # 
             # if(DEBUG ==1){
-              
-              cat("FLAG_overlap_0\n")
-              str(FLAG_overlap)
-              cat("\n")
+            
+            cat("FLAG_overlap_0\n")
+            str(FLAG_overlap)
+            cat("\n")
             # }
             
             
@@ -673,76 +672,81 @@ GSEA_function = function(option_list)
               # do nothing
               
             }#FLAG_overlap > 0
-        }#iteration_bg_files in 1:length(bg_files)
+          }#iteration_bg_files in 1:length(bg_files)
+          
+          
+          
+          if(dim(contrast_df)[1] >0){
+            
+            contrast_df$contrast<-contrast_sel        
+            
+            
+            if(DEBUG ==1){
+              cat("contrast_df-----------------------------------------------\n")
+              str(contrast_df)
+              cat("\n")
+              cat(sprintf(as.character(names(summary(as.factor(contrast_df$contrast))))))
+              cat("\n")
+              cat(sprintf(as.character(summary(as.factor(contrast_df$contrast)))))
+              cat("\n")
+              cat(sprintf(as.character(names(summary(as.factor(contrast_df$ID))))))
+              cat("\n")
+              cat(sprintf(as.character(summary(as.factor(contrast_df$ID)))))
+              cat("\n")
+            }
+            
+            
+            identity_df<-rbind(contrast_df,identity_df)
+            
+            contrast_list[[k]]<-List_bg_files
+            
+            names(contrast_list)[k]<-contrast_sel
+            
+            
+            
+            
+          }# dim(contrast_df)[1] >0    
+          
+          
+          
+        }# dim(DE_result_sel_with_ENTREZ_sel)[1] > 0
         
-        
-        
-        if(dim(contrast_df)[1] >0){
-          
-          contrast_df$contrast<-contrast_sel        
-          
-          
-          if(DEBUG ==1){
-            cat("contrast_df-----------------------------------------------\n")
-            str(contrast_df)
-            cat("\n")
-            cat(sprintf(as.character(names(summary(as.factor(contrast_df$contrast))))))
-            cat("\n")
-            cat(sprintf(as.character(summary(as.factor(contrast_df$contrast)))))
-            cat("\n")
-            cat(sprintf(as.character(names(summary(as.factor(contrast_df$ID))))))
-            cat("\n")
-            cat(sprintf(as.character(summary(as.factor(contrast_df$ID)))))
-            cat("\n")
-          }
-          
-          
-          identity_df<-rbind(contrast_df,identity_df)
-          
-          contrast_list[[k]]<-List_bg_files
-          
-          names(contrast_list)[k]<-contrast_sel
-          
-          
-          
-          
-        }# dim(contrast_df)[1] >0    
-        
-        
-        
-      }# dim(DE_result_sel_with_ENTREZ_sel)[1] > 0
+      }# k in 1:length(array_contrasts)
       
-    }# k in 1:length(array_contrasts)
+      
+      if(dim(identity_df)[1] >0){             
+        
+        identity_df$identity<-identity_sel
+        
+        if(DEBUG ==1){
+          cat("identity_df\n")
+          str(identity_df)
+          cat("\n")
+          cat(sprintf(as.character(names(summary(as.factor(identity_df$identity))))))
+          cat("\n")
+          cat(sprintf(as.character(summary(as.factor(identity_df$identity)))))
+          cat("\n")
+          cat(sprintf(as.character(names(summary(as.factor(identity_df$contrast))))))
+          cat("\n")
+          cat(sprintf(as.character(summary(as.factor(identity_df$contrast)))))
+          cat("\n")
+        }
+        
+        GSEA_df<-rbind(identity_df,GSEA_df)
+        
+        
+        Leading_edge_list[[identity_sel]]<-contrast_list
+        
+        
+        
+        
+      }#dim(identity_df)[1] >0
+      
+      
+    }#dim(DE_result_sel)[1] >0
     
     
-    if(dim(identity_df)[1] >0){             
-      
-      identity_df$identity<-identity_sel
-      
-      if(DEBUG ==1){
-        cat("identity_df\n")
-        str(identity_df)
-        cat("\n")
-        cat(sprintf(as.character(names(summary(as.factor(identity_df$identity))))))
-        cat("\n")
-        cat(sprintf(as.character(summary(as.factor(identity_df$identity)))))
-        cat("\n")
-        cat(sprintf(as.character(names(summary(as.factor(identity_df$contrast))))))
-        cat("\n")
-        cat(sprintf(as.character(summary(as.factor(identity_df$contrast)))))
-        cat("\n")
-      }
-      
-      GSEA_df<-rbind(identity_df,GSEA_df)
-      
-
-      Leading_edge_list[[identity_sel]]<-contrast_list
-      
-
-      
-      
-    }#dim(identity_df)[1] >0
-    
+   
   }# i in 1:length(array_identities)
   
   

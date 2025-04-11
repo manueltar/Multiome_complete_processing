@@ -533,6 +533,10 @@ upsetr_function_restricted = function(option_list)
   
   if(file.exists(path_graphs)){
     
+    unlink(path_graphs)
+    dir.create(path_graphs)
+    
+    
   }else{
     
     dir.create(path_graphs)
@@ -593,7 +597,7 @@ upsetr_function_restricted = function(option_list)
   cat("\n")
   
   
-  DEBUG<-0
+  DEBUG<-1
   
   list_results<-list()
   
@@ -974,7 +978,7 @@ main = function() {
                         option_list = option_list)
   opt <<- parse_args(parser)
   
-  upsetr_function(opt)
+  # upsetr_function(opt)
   upsetr_function_restricted(opt)
 
   

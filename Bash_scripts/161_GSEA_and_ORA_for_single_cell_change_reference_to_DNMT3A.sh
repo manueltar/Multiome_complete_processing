@@ -77,7 +77,7 @@ myjobid_seff_heatmap_function=$(sbatch --dependency=afterany:$myjobid_heatmap_fu
 
 
 
-conda deactivate
+# conda deactivate
 
 conda activate GSEA
 
@@ -101,7 +101,7 @@ GSEA_result=$(echo "$output_dir""GSEA_results_significant.rds")
 
 # --dependency=afterany:$myjobid_DE_function
 
-myjobid_MSigDB_GSEA=$(sbatch --dependency=afterany:$myjobid_DE_function  --job-name=$name_MSigDB_GSEA --output=$outfile_MSigDB_GSEA --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=2 --mem-per-cpu=1024 --parsable --wrap="Rscript $Rscript_MSigDB_GSEA --DE_results $DE_results --path_to_GMT $path_to_GMT --search_terms $search_terms --pval_threshold $pval_threshold --log2FC_threshold $log2FC_threshold --Threshold_number_of_genes $Threshold_number_of_genes --TF_terms $TF_terms --List_GSEA $List_GSEA --GSEA_result $GSEA_result --type $type --out $output_dir")
+myjobid_MSigDB_GSEA=$(sbatch --dependency=afterany:$myjobid_DE_function --job-name=$name_MSigDB_GSEA --output=$outfile_MSigDB_GSEA --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=2 --mem-per-cpu=1024 --parsable --wrap="Rscript $Rscript_MSigDB_GSEA --DE_results $DE_results --path_to_GMT $path_to_GMT --search_terms $search_terms --pval_threshold $pval_threshold --log2FC_threshold $log2FC_threshold --Threshold_number_of_genes $Threshold_number_of_genes --TF_terms $TF_terms --List_GSEA $List_GSEA --GSEA_result $GSEA_result --type $type --out $output_dir")
 myjobid_seff_MSigDB_GSEA=$(sbatch --dependency=afterany:$myjobid_MSigDB_GSEA --open-mode=append --output=$outfile_MSigDB_ORA --job-name=$seff_name --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=1 --mem-per-cpu=128M --parsable --wrap="seff $myjobid_MSigDB_GSEA >> $outfile_MSigDB_GSEA")
 
 ############################################################## ################################################################
@@ -117,7 +117,9 @@ seff_name=$(echo "seff""_""$type")
 Rscript_UpsetR_gene_sets=$(echo "$Rscripts_path""453_UpSetR_GSEA_gene_set_overlaps.R")
 
 indir=$(echo "$output_dir""GSEA_background_adapted/")
-selected_terms=$(echo "MEGAKARYOCYTE,Dorothea_ABCD_GATA6,Dorothea_ABCD_BCL11A")
+selected_terms=$(echo "LIVER_MEGAKARYOCYTE,FETAL_MEGAKARYOCYTE,Dorothea_ABCD_GATA6,Dorothea_ABCD_BCL11A")
+
+# --dependency=afterany:$myjobid_MSigDB_GSEA
 
 myjobid_UpsetR_gene_sets=$(sbatch --dependency=afterany:$myjobid_MSigDB_GSEA --output=$outfile_UpsetR_gene_sets --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=1 --mem-per-cpu=4096 --parsable --job-name $name_UpsetR_gene_sets --wrap="Rscript $Rscript_UpsetR_gene_sets --indir $indir --selected_terms $selected_terms --type $type --out $indir")
 myjobid_seff_UpsetR_gene_sets=$(sbatch --dependency=afterany:$myjobid_UpsetR_gene_sets --open-mode=append --output=$outfile_UpsetR_gene_sets --job-name=$seff_name --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=1 --mem-per-cpu=128M --parsable --wrap="seff $myjobid_UpsetR_gene_sets >> $outfile_UpsetR_gene_sets")

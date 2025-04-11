@@ -19,6 +19,10 @@ $ bash ~/Scripts/Wraper_scripts/161_GSEA_and_ORA_for_single_cell_change_referenc
 
 $ bash ~/Scripts/Wraper_scripts/145_Multiome_bespoke_heatmaps.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/Downstream_analysis_cluster_after_genotyping/AFTER_RPCA_INTEGRATION/ DE_per_identity /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/Downstream_analysis_cluster_after_genotyping/AFTER_RPCA_INTEGRATION/DE_per_identity/genes_GSEA_annotated.tsv
 
+(For DNMT3A reference run)
+
+$ bash ~/Scripts/Wraper_scripts/145_Multiome_bespoke_heatmaps.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/Downstream_analysis_cluster_after_genotyping/AFTER_RPCA_INTEGRATION/ DE_per_identity_change_ref_to_DNMT3A /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/Downstream_analysis_cluster_after_genotyping/AFTER_RPCA_INTEGRATION/DE_per_identity_change_ref_to_DNMT3A/genes_GSEA_annotated.tsv
+
 # To recall peaks using the the rpca_annotation run:
 
 $ bash ~/Scripts/Wraper_scripts/138_MACS2_recall_peaks_by_cell_type_integrated_annotation.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/ Downstream_analysis_cluster_after_genotyping

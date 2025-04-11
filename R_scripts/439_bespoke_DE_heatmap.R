@@ -26,18 +26,63 @@ library("ggrepel")
 
 library("optparse")
 suppressMessages(library("splitstackshape")) 
+suppressMessages(library("ggupset"))
+
 
 
 opt = NULL
 
 options(warn = 1)
 
+Convert_up <- function(TB){
+  
+  # from https://karobben.github.io/2021/03/31/R/ggupset/ and https://github.com/const-ae/ggupset
+  
+  TB_tmp = TB
+  
+  cat("TB_tmp_initial\n")
+  cat(str(TB_tmp))
+  cat("\n")
+  
+  for(i in colnames(TB)){
+    # cat("-------------------------->i\t")
+    # cat(sprintf(as.character(i)))
+    # cat("\n")
+    
+    TB_tmp[i] = i
+    
+    # cat("TB_tmp_0\n")
+    # cat(str(TB_tmp))
+    # cat("\n")
+    
+  }
+  TB_tmp[TB == 0] = ""
+  
+  # cat("TB_tmp_1\n")
+  # cat(str(TB_tmp))
+  # cat("\n")
+  
+  TB_t <- data.frame(t(TB_tmp), stringsAsFactors = F)
+  
+  # cat("TB_t_0\n")
+  # cat(str(TB_t))
+  # cat("\n")
+  
+  TB_tmp$upset = as.list(TB_t)
+  
+  # cat("TB_tmp_FIN\n")
+  # cat(str(TB_tmp))
+  # cat("\n")
+  
+  return(TB_tmp)
+}
+
 
 multiVals <- function(x) paste(x,collapse=";")
 
 heatmap_function_TFs = function(option_list)
 {
-
+  
   opt_in = option_list
   opt <<- option_list
   
@@ -53,7 +98,7 @@ heatmap_function_TFs = function(option_list)
   cat(sprintf(as.character(type)))
   cat("\n")
   
- 
+  
   #### READ and transform out ----
   
   out = opt$out
@@ -70,6 +115,22 @@ heatmap_function_TFs = function(option_list)
   cat(sprintf(as.character(selected_annotations)))
   cat("\n")
   
+  #### READ selected_clone_lines ----
+  
+  selected_clone_lines = unlist(strsplit(opt$selected_clone_lines, split=","))
+  
+  cat("selected_clone_lines_0\n")
+  cat(sprintf(as.character(selected_clone_lines)))
+  cat("\n")
+  
+  #### READ selected_contrasts ----
+  
+  selected_contrasts = unlist(strsplit(opt$selected_contrasts, split=","))
+  
+  cat("selected_contrasts_0\n")
+  cat(sprintf(as.character(selected_contrasts)))
+  cat("\n")
+  
   #### READ and transform annotation_file ----
   
   
@@ -80,7 +141,7 @@ heatmap_function_TFs = function(option_list)
   cat("\n")
   
   annotation_file_long<-unique(as.data.frame(cSplit(annotation_file,sep = '|', direction = "long",
-                                           splitCols = "TF_targets"),stringsAsFactors=F))
+                                                    splitCols = "TF_targets"),stringsAsFactors=F))
   
   cat("annotation_file_long_0\n")
   cat(str(annotation_file_long))
@@ -135,7 +196,7 @@ heatmap_function_TFs = function(option_list)
     cat(str(array_identities))
     cat("\n")
     
-    DEBUG<-0
+    DEBUG<-1
     
     
     for(i in 1:length(array_identities)){
@@ -159,7 +220,8 @@ heatmap_function_TFs = function(option_list)
       }
       
       
-      DE_result_sel<-droplevels(DE_result[which(DE_result$identity == identity_sel),])
+      DE_result_sel<-droplevels(DE_result[which(DE_result$identity == identity_sel &
+                                                  DE_result$contrast%in%selected_contrasts),])
       
       if(DEBUG == 1){
         
@@ -171,10 +233,10 @@ heatmap_function_TFs = function(option_list)
       annotation_file_long_sel_identity_sel<-annotation_file_long_sel[which(annotation_file_long_sel$identity == identity_sel),]
       
       if(DEBUG == 1){
-      
-      cat("annotation_file_long_sel_identity_sel_0\n")
-      cat(str(annotation_file_long_sel_identity_sel))
-      cat("\n")
+        
+        cat("annotation_file_long_sel_identity_sel_0\n")
+        cat(str(annotation_file_long_sel_identity_sel))
+        cat("\n")
       }
       
       
@@ -189,6 +251,8 @@ heatmap_function_TFs = function(option_list)
         cat(str(annotation_file_long_sel_identity_sel))
         cat("\n")
       }
+    
+      ####################################### COLLAPSE --------------------
       
       annotation_file_long_sel_identity_sel.dt<-data.table(annotation_file_long_sel_identity_sel, key='gene')
       
@@ -226,7 +290,8 @@ heatmap_function_TFs = function(option_list)
       
       
       REP<-normalised_counts[which(normalised_counts$gene%in%annotation_file_sel_collapsed$gene &
-                                     normalised_counts$identity == identity_sel),]
+                                     normalised_counts$identity == identity_sel &
+                                     normalised_counts$clone_line%in%selected_clone_lines),]
       
       if(DEBUG == 1){
         
@@ -339,7 +404,7 @@ heatmap_function_TFs = function(option_list)
       }
       
       
-     
+      
       
       
       
@@ -395,7 +460,7 @@ heatmap_function_TFs = function(option_list)
         cat(str(GeneClass_vector))
         cat("\n")
       }
-
+      
       
       
       ann_colors <- list( clone_line = vector_colors_clone_line,
@@ -422,13 +487,14 @@ heatmap_function_TFs = function(option_list)
         heatmap<-pheatmap(GeneEXP_matrix, display_numbers = FALSE,
                           show_colnames=FALSE,
                           angle_col = "0",
+                          cluster_rows=TRUE, 
+                          cluster_cols=FALSE,
                           clustering_method="ward.D2",
                           fontsize_row = 8, 
                           fontsize_col = 8,
                           breaks=seq(-2,2,length.out=101),
                           color=colorRampPalette(c("blue","white","red"))(100),
                           scale="row",
-                          cluster_cols=TRUE,
                           border_color='black',
                           treeheight_row=70, treeheight_col=70, cutree_cols=7,
                           annotation_col = annotation_col,
@@ -437,9 +503,9 @@ heatmap_function_TFs = function(option_list)
         
         setwd(path_identity_sel)
         
-        svgname<-paste("Heatmap_",paste(selected_annotations, collapse="_"),".svg",sep='')
+        svgname<-paste("Heatmap_",paste(selected_annotations, collapse="_"),"_",paste(selected_contrasts, collapse="_"),".svg",sep='')
         
-        ggsave(svgname,plot=heatmap, device ='svg', width=13, height=13)
+        ggsave(svgname,plot=heatmap, device ='svg')
         
         FLAG_log_pval<-1
         
@@ -452,13 +518,14 @@ heatmap_function_TFs = function(option_list)
                             show_colnames=FALSE,
                             show_rownames=FALSE,
                             angle_col = "0",
+                            cluster_rows=TRUE, 
+                            cluster_cols=FALSE,
                             clustering_method="ward.D2",
                             fontsize_row = 8, 
                             fontsize_col = 8,
                             breaks=seq(-2,2,length.out=101),
                             color=colorRampPalette(c("blue","white","red"))(100),
                             scale="row",
-                            cluster_cols=TRUE,
                             border_color='black',
                             treeheight_row=70, treeheight_col=70, cutree_cols=7,
                             annotation_col = annotation_col,
@@ -467,9 +534,9 @@ heatmap_function_TFs = function(option_list)
           
           setwd(path_identity_sel)
           
-          svgname<-paste("Heatmap_",paste(selected_annotations, collapse="_"),".svg",sep='')
+          svgname<-paste("Heatmap_",paste(selected_annotations, collapse="_"),"_",paste(selected_contrasts, collapse="_"),".svg",sep='')
           
-          ggsave(svgname,plot=heatmap, device ='svg', width=13, height=13)
+          ggsave(svgname,plot=heatmap, device ='svg')
           
           FLAG_log_pval<-1
           
@@ -500,7 +567,7 @@ heatmap_function_TFs = function(option_list)
         cat(str(selected_genes_after_heatmap_clustering))
         cat("\n")
         
-
+        
         
         logpval_df<-DE_result_sel[which(DE_result_sel$gene%in%selected_genes_after_heatmap_clustering),]
         
@@ -564,8 +631,8 @@ heatmap_function_TFs = function(option_list)
         
         setwd(path_identity_sel)
         
-
-        svgname<-paste("logpval_dotplot_",paste(selected_annotations, collapse="_"),".svg",sep='')
+        
+        svgname<-paste("logpval_dotplot_",paste(selected_annotations, collapse="_"),"_",paste(selected_contrasts, collapse="_"),".svg",sep='')
         
         ggsave(svgname,plot=logpval_dotplot, device ='svg')
         
@@ -579,8 +646,9 @@ heatmap_function_TFs = function(option_list)
     
   }#length(total_matches) >0
   
- 
+  
 }
+
 
 heatmap_function_other = function(option_list)
 {
@@ -615,6 +683,22 @@ heatmap_function_other = function(option_list)
   
   cat("selected_annotations_other\n")
   cat(sprintf(as.character(selected_annotations_other)))
+  cat("\n")
+  
+  #### READ selected_clone_lines ----
+  
+  selected_clone_lines = unlist(strsplit(opt$selected_clone_lines, split=","))
+  
+  cat("selected_clone_lines_0\n")
+  cat(sprintf(as.character(selected_clone_lines)))
+  cat("\n")
+  
+  #### READ selected_contrasts ----
+  
+  selected_contrasts = unlist(strsplit(opt$selected_contrasts, split=","))
+  
+  cat("selected_contrasts_0\n")
+  cat(sprintf(as.character(selected_contrasts)))
   cat("\n")
   
   #### READ and transform annotation_file ----
@@ -682,7 +766,7 @@ heatmap_function_other = function(option_list)
     cat(str(array_identities))
     cat("\n")
     
-    DEBUG<-0
+    DEBUG<-1
     
     
     for(i in 1:length(array_identities)){
@@ -706,7 +790,8 @@ heatmap_function_other = function(option_list)
       }
       
       
-      DE_result_sel<-droplevels(DE_result[which(DE_result$identity == identity_sel),])
+      DE_result_sel<-droplevels(DE_result[which(DE_result$identity == identity_sel  &
+                                                  DE_result$contrast%in%selected_contrasts),])
       
       if(DEBUG == 1){
         
@@ -725,9 +810,7 @@ heatmap_function_other = function(option_list)
       }
       
       
-      annotation_file_long_sel_identity_sel$other<-factor(annotation_file_long_sel_identity_sel$other,
-                                                               levels=unique(annotation_file_long_sel_identity_sel$other),
-                                                               ordered = T)
+      annotation_file_long_sel_identity_sel$other<-factor(annotation_file_long_sel_identity_sel$other)
       
       annotation_file_long_sel_identity_sel<-annotation_file_long_sel_identity_sel[order(annotation_file_long_sel_identity_sel$other),]
       
@@ -741,15 +824,6 @@ heatmap_function_other = function(option_list)
       
       annotation_file_sel_collapsed<-as.data.frame(annotation_file_long_sel_identity_sel.dt[,.(other_string=paste(other, collapse="\n")), by=key(annotation_file_long_sel_identity_sel.dt)], stringsAsFactors=F)
       
-      vector_of_other_string<-unique(annotation_file_sel_collapsed$other_string)
-      
-      rordered_unique_levels<-c(vector_of_other_string[which(vector_of_other_string%in%unique(annotation_file_long_sel_identity_sel$other))],
-                                vector_of_other_string[-which(vector_of_other_string%in%unique(annotation_file_long_sel_identity_sel$other))])
-      
-      annotation_file_sel_collapsed$other_string<-factor(annotation_file_sel_collapsed$other_string,
-                                                      levels=rordered_unique_levels,
-                                                      ordered=T)
-      
       
       if(DEBUG == 1){
         cat("annotation_file_sel_collapsed_0\n")
@@ -757,7 +831,17 @@ heatmap_function_other = function(option_list)
         cat("\n")
       }
       
+      vector_of_other_string<-unique(annotation_file_sel_collapsed$other_string)
+      
+      if(DEBUG == 1){
+        cat("vector_of_other_string_0\n")
+        cat(str(vector_of_other_string))
+        cat("\n")
+      }
+      
+     
       annotation_file_sel_collapsed$other_string<-factor(annotation_file_sel_collapsed$other_string)
+                                                      
       
       
       if(DEBUG == 1){
@@ -776,7 +860,8 @@ heatmap_function_other = function(option_list)
       
       
       REP<-normalised_counts[which(normalised_counts$gene%in%annotation_file_sel_collapsed$gene &
-                                     normalised_counts$identity == identity_sel),]
+                                     normalised_counts$identity == identity_sel &
+                                     normalised_counts$clone_line%in%selected_clone_lines),]
       
       if(DEBUG == 1){
         
@@ -968,17 +1053,21 @@ heatmap_function_other = function(option_list)
       
       if(dim(REP_wide)[1] <= 75 & dim(REP_wide)[1] > 1){
         
+        cat("Hello_world_1\n")
+        
+        
         
         heatmap<-pheatmap(GeneEXP_matrix, display_numbers = FALSE,
                           show_colnames=FALSE,
                           angle_col = "0",
+                          cluster_rows=TRUE, 
+                          cluster_cols=FALSE,
                           clustering_method="ward.D2",
                           fontsize_row = 8, 
                           fontsize_col = 8,
                           breaks=seq(-2,2,length.out=101),
                           color=colorRampPalette(c("blue","white","red"))(100),
                           scale="row",
-                          cluster_cols=TRUE,
                           border_color='black',
                           treeheight_row=70, treeheight_col=70, cutree_cols=7,
                           annotation_col = annotation_col,
@@ -987,9 +1076,9 @@ heatmap_function_other = function(option_list)
         
         setwd(path_identity_sel)
         
-        svgname<-paste("Heatmap_",paste(selected_annotations_other, collapse="_"),".svg",sep='')
+        svgname<-paste("Heatmap_",paste(selected_annotations_other, collapse="_"),"_",paste(selected_contrasts, collapse="_"),".svg",sep='')
         
-        ggsave(svgname,plot=heatmap, device ='svg', width=13, height=13)
+        ggsave(svgname,plot=heatmap, device ='svg')
         
         FLAG_log_pval<-1
         
@@ -998,9 +1087,13 @@ heatmap_function_other = function(option_list)
         
         if(dim(REP_wide)[1] > 75){
           
+          cat("Hello_world_2\n")
+          
+          
           heatmap<-pheatmap(GeneEXP_matrix, display_numbers = FALSE,
                             show_colnames=FALSE,
-                            show_rownames=FALSE,
+                            cluster_rows=TRUE, 
+                            cluster_cols=FALSE,
                             angle_col = "0",
                             clustering_method="ward.D2",
                             fontsize_row = 8, 
@@ -1008,7 +1101,6 @@ heatmap_function_other = function(option_list)
                             breaks=seq(-2,2,length.out=101),
                             color=colorRampPalette(c("blue","white","red"))(100),
                             scale="row",
-                            cluster_cols=TRUE,
                             border_color='black',
                             treeheight_row=70, treeheight_col=70, cutree_cols=7,
                             annotation_col = annotation_col,
@@ -1017,9 +1109,9 @@ heatmap_function_other = function(option_list)
           
           setwd(path_identity_sel)
           
-          svgname<-paste("Heatmap_",paste(selected_annotations_other, collapse="_"),".svg",sep='')
+          svgname<-paste("Heatmap_",paste(selected_annotations_other, collapse="_"),"_",paste(selected_contrasts, collapse="_"),".svg",sep='')
           
-          ggsave(svgname,plot=heatmap, device ='svg', width=13, height=13)
+          ggsave(svgname,plot=heatmap, device ='svg')
           
           FLAG_log_pval<-1
           
@@ -1043,13 +1135,18 @@ heatmap_function_other = function(option_list)
       ##### logpval plot ----
       
       if(FLAG_log_pval == 1){
+        
+        cat("Hello_world_3\n")
+        
+        
         selected_genes_after_heatmap_clustering<-heatmap$tree_row$labels[heatmap$tree_row$order]
         
-        if(DEBUG == 1){
-          cat("selected_genes_after_heatmap_clustering_0\n")
-          cat(str(selected_genes_after_heatmap_clustering))
-          cat("\n")
-        }
+        
+        cat("selected_genes_after_heatmap_clustering_0\n")
+        cat(str(selected_genes_after_heatmap_clustering))
+        cat("\n")
+        
+        
         
         logpval_df<-DE_result_sel[which(DE_result_sel$gene%in%selected_genes_after_heatmap_clustering),]
         
@@ -1114,7 +1211,7 @@ heatmap_function_other = function(option_list)
         setwd(path_identity_sel)
         
         
-        svgname<-paste("logpval_dotplot_",paste(selected_annotations_other, collapse="_"),".svg",sep='')
+        svgname<-paste("logpval_dotplot_",paste(selected_annotations_other, collapse="_"),"_",paste(selected_contrasts, collapse="_"),".svg",sep='')
         
         ggsave(svgname,plot=logpval_dotplot, device ='svg')
         
@@ -1130,6 +1227,8 @@ heatmap_function_other = function(option_list)
   
   
 }
+
+
 
 
 printList = function(l, prefix = "    ") {
@@ -1158,6 +1257,12 @@ main = function() {
                 metavar="type", 
                 help="Path to tab-separated input file listing regions to analyze. Required."),
     make_option(c("--selected_annotations_other"), type="character", default=NULL, 
+                metavar="type", 
+                help="Path to tab-separated input file listing regions to analyze. Required."),
+    make_option(c("--selected_clone_lines"), type="character", default=NULL, 
+                metavar="type", 
+                help="Path to tab-separated input file listing regions to analyze. Required."),
+    make_option(c("--selected_contrasts"), type="character", default=NULL, 
                 metavar="type", 
                 help="Path to tab-separated input file listing regions to analyze. Required."),
     make_option(c("--annotation_file"), type="character", default=NULL, 

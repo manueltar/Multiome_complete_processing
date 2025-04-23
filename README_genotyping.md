@@ -1,3 +1,24 @@
+############################################# genotyping directly from GEX libraries #################################################################
+############################################# genotyping directly from GEX libraries #################################################################
+############################################# genotyping directly from GEX libraries #################################################################
+
+0. Index the reference genome of barcodes
+
+$ bwa-mem2 index /group/soranzo/manuel.tardaguila/Multiome/RITM0023280/special_reference_files/GFP_transgene_vCHEK2_and_DNMT3A.fa
+
+1. First align unaligned reads with bwa-mem
+
+	sbatch ~/Scripts/sbatch/6_align_to_barcodes_v2.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/ /group/soranzo/manuel.tardaguila/Multiome/RITM0023280/special_reference_files/GFP_transgene_vCHEK2_and_DNMT3A.fa <sample_id>
+
+2. Then process the aligned barcodes to get the asignation at different thresholds ofr minimum of barcodes mapped
+
+$ bash ~/Scripts/Wraper_scripts/119_Filter_Larry_and_graphs.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/deconvolute_LARRY/ count_and_filter
+
+or
+
+$ bash ~/Scripts/Wraper_scripts/119_Filter_Larry_and_graphs_v2.sh /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/deconvolute_LARRY/ count_and_filter /group/soranzo/manuel.tardaguila/2025_hESC_lymph_multiome/Multiome/deconvolute_LARRY/
+
+
 ############################################# targeted amplification of the GEX libraries #################################################################
 ############################################# targeted amplification of the GEX libraries #################################################################
 ############################################# targeted amplification of the GEX libraries #################################################################

@@ -53,4 +53,6 @@ $ sbatch ~/Scripts/Wraper_scripts/131_Cell_Bender_for_targeted_amplified_librari
 $ sbatch ~/Scripts/Wraper_scripts/131_Cell_Bender_for_targeted_amplified_libraries.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/GEX_reseq/alignment/cellranger/ MCO_01328
 $ sbatch ~/Scripts/Wraper_scripts/131_Cell_Bender_for_targeted_amplified_libraries.sh /group/soranzo/manuel.tardaguila/2025_hESC_MK_multiome/GEX_reseq/alignment/cellranger/ MCO_01329
 
-# 5. See the jupyter notebook notebook_to_assign_barcodes.ipynb for the steps to genotype the cells
+# 5. See the jupyter notebook for the steps to genotype the cells
+
+notebook_to_assign_barcodes.ipynb 

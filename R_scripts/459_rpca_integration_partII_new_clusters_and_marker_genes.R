@@ -27,8 +27,7 @@ suppressMessages(library("tibble"))
 suppressMessages(library("biovizBase"))
 suppressMessages(library("patchwork"))
 suppressMessages(library(glmGamPoi))
-suppressMessages(library(SeuratData))
-suppressMessages(library(SeuratDisk))
+
 
 
 
@@ -36,7 +35,7 @@ opt = NULL
 
 options(warn = -1)
 
-cluster_at_low_res_and_exporth5ad = function(option_list)
+rpca_integration = function(option_list)
 {
   
   opt_in = option_list
@@ -63,74 +62,62 @@ cluster_at_low_res_and_exporth5ad = function(option_list)
   cat(sprintf(as.character(out)))
   cat("\n")
   
-  #### READ and transform res_param ----
-  
-  res_param = opt$res_param
-  
-  cat("res_param_\n")
-  cat(sprintf(as.character(res_param)))
-  cat("\n")
-  
   #### Read filtered object by doublets -----
   
   
-  adata2<-readRDS(file=opt$db_filt_clustered_QCed)
+  adata<-readRDS(file=opt$db_filt_clustered_QCed_cell_annotated_rpca_integrate)
   
-  cat("adata2_0\n")
-  cat(str(adata2))
+  cat("adata_0\n")
+  # cat(str(adata))
+  cat("\n")
+  
+  #### Name the new graph -----
+  
+  cat("FindNeighbors\n")
+  
+  adata <- FindNeighbors(adata)
+  
+  #### Find new clusters at resolution 0.5 ----
+  
+  cat("FindClusters\n")
+  
+  
+  adata <- FindClusters(adata, graph.name='integrated_nn', algorithm=4, resolution = 0.5, verbose=FALSE, method = "igraph")
+  
+  #### Prepare SCT for Find Markers see https://satijalab.org/seurat/reference/prepsctfindmarkers ----
+  
+  cat("PrepSCTFindMarkers\n")
+  
+  
+  adata<-PrepSCTFindMarkers(adata, assay = "SCT", verbose = TRUE)
+  
+  #### Find marker genes ----
+  
+  cat("FindAllMarkers\n")
+  
+  
+  adata.markers <- FindAllMarkers(adata, logfc.threshold = 0.25, test.use = "roc")
+  
+  cat("adata.markers_0\n")
+  cat(str(adata.markers))
   cat("\n")
   
   
-  
-  #### Cluster without integration and check if any cluster looks specially bad for QC metrics -------------
-  
-  DefaultAssay(adata2) <- 'RNA'
-  
-  adata2 <- SCTransform(adata2, verbose = FALSE) 
-  adata2 <- RunPCA(adata2) 
-  adata2 <- RunUMAP(adata2, dims=1:50, reduction.name='umap.rna', reduction.key='rnaUMAP_')
-  
-  #### ATAC modality -------------
-  # We exclude the first dimension as this is typically correlated with sequencing depth
-  
-  
-  DefaultAssay(adata2) <- 'ATAC'
 
-  adata2 <- RunTFIDF(adata2)
-  adata2 <- FindTopFeatures(adata2, min.cutoff='q0')
-  adata2 <- RunSVD(adata2)
-  adata2 <- RunUMAP(adata2, reduction='lsi', dims=2:50, reduction.name='umap.atac', reduction.key='atacUMAP_')
+  ##### Saving ---------------
   
-  
-  #### WNN ATAC+RNA modality -------------
-  
-  adata2 <- FindMultiModalNeighbors(adata2, reduction.list=list('pca', 'lsi'), dims.list=list(1:50, 2:50))
-  adata2 <- RunUMAP(adata2, nn.name='weighted.nn', reduction.name='umap.wnn', reduction.key='wnnUMAP_')
-  adata2 <- FindClusters(adata2, graph.name='wsnn', algorithm=4, resolution = res_param, verbose=FALSE, method = "igraph")
-  
-  
-  ###### SAVE -----
+  cat("Saving\n")
   
   setwd(out)
   
-  saveRDS(adata2, file = 'merged_unprocessed_db_filt_clustered_QCed_reclustered.rds')
+  saveRDS(adata, file="merged_unprocessed_db_db_filt_clustered_QCed_cell_annotated_rpca_integrate_rpca_integrate_clustered.rds")
+  
+  saveRDS(adata.markers, file="merged_unprocessed_db_db_filt_clustered_QCed_cell_annotated_rpca_integrate_rpca_integrate_clustered_MARKER_GENES.rds")
   
   
   
-  ##### Reduce the Seurat object to h5ad with RNA counts corrected by CellBender It doesn't work with CellBender corrected counts------
   
-  DefaultAssay(adata2)<-'RNA'
-  RNA_only<-DietSeurat(adata2, assays = "RNA")
-  
-  ###### SAVE -----
-  
-  setwd(out)
-  
-  SaveH5Seurat(RNA_only, filename = "merged_unprocessed_db_filt_clustered_QCed_reclustered.h5Seurat")
-  Convert("merged_unprocessed_db_filt_clustered_QCed_reclustered.h5Seurat", dest = "h5ad")
-  
-  
-  
+ 
 }
 
 
@@ -150,10 +137,7 @@ main = function() {
             paste(cmd_line[6:length(cmd_line)], collapse = " "),
             "\n\n"))
   option_list <- list(
-    make_option(c("--db_filt_clustered_QCed"), type="character", default=NULL, 
-                metavar="type", 
-                help="Path to tab-separated input file listing regions to analyze. Required."),
-    make_option(c("--res_param"), type="numeric", default=NULL, 
+    make_option(c("--db_filt_clustered_QCed_cell_annotated_rpca_integrate"), type="character", default=NULL, 
                 metavar="type", 
                 help="Path to tab-separated input file listing regions to analyze. Required."),
     make_option(c("--type"), type="character", default=NULL, 
@@ -173,7 +157,7 @@ main = function() {
                         option_list = option_list)
   opt <<- parse_args(parser)
   
-  cluster_at_low_res_and_exporth5ad(opt)
+  rpca_integration(opt)
  
 
 }
